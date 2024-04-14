@@ -39,9 +39,37 @@ func (a *AuthHandlerImpl) Register(ctx *gin.Context) {
 	}
 
 	response := dto.ApiResponse{
+		StatusCode: http.StatusCreated,
+		Status:     http.StatusText(http.StatusCreated),
+		Message:    "successfully registered a new user",
+		Data:       result,
+	}
+
+	ctx.JSON(http.StatusCreated, response)
+}
+
+func (a *AuthHandlerImpl) Login(ctx *gin.Context) {
+	userDto := &dto.LoginUserRequest{}
+
+	if err := ctx.ShouldBindJSON(userDto); err != nil {
+		log.Printf("[Login - Handler], err: %s", err.Error())
+		unprocessableEntityError := errs.NewUnprocessableEntityError("invalid json request body")
+
+		ctx.AbortWithStatusJSON(unprocessableEntityError.StatusCode(), unprocessableEntityError)
+		return
+	}
+
+	result, err := a.AuthService.Login(ctx, userDto)
+
+	if err != nil {
+		ctx.AbortWithStatusJSON(err.StatusCode(), err)
+		return
+	}
+
+	response := dto.ApiResponse{
 		StatusCode: http.StatusOK,
 		Status:     http.StatusText(http.StatusOK),
-		Message:    "successfully registered a new user",
+		Message:    "login successful",
 		Data:       result,
 	}
 
