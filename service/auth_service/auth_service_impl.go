@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 	"github.com/rulyadhika/simple-gin-go-rest-api/infra/packages/errs"
+	"github.com/rulyadhika/simple-gin-go-rest-api/infra/packages/jwt"
 	validationformatter "github.com/rulyadhika/simple-gin-go-rest-api/infra/packages/validation_formatter"
 	"github.com/rulyadhika/simple-gin-go-rest-api/model/dto"
 	"github.com/rulyadhika/simple-gin-go-rest-api/model/entity"
@@ -49,22 +50,15 @@ func (a *AuthServiceImpl) Register(ctx *gin.Context, userDto *dto.RegisterUserRe
 		Password: userDto.Password,
 	}
 
-	findByEmail, err := a.UserRepository.FindByEmail(ctx, a.DB, user.Email)
-
-	if err != nil {
+	if findByEmail, err := a.UserRepository.FindByEmail(ctx, a.DB, user.Email); err != nil {
 		return nil, err
-	}
-
-	if findByEmail != nil {
+	} else if findByEmail != nil {
 		return nil, errs.NewConflictError("email has already been taken")
 	}
 
-	findByUsername, err := a.UserRepository.FindByUsername(ctx, a.DB, user.Username)
-	if err != nil {
+	if findByUsername, err := a.UserRepository.FindByUsername(ctx, a.DB, user.Username); err != nil {
 		return nil, err
-	}
-
-	if findByUsername != nil {
+	} else if findByUsername != nil {
 		return nil, errs.NewConflictError("username has already been taken")
 	}
 
@@ -92,4 +86,49 @@ func (a *AuthServiceImpl) Register(ctx *gin.Context, userDto *dto.RegisterUserRe
 	}
 
 	return &dto.RegisterUserResponse{Username: result.Username, Email: result.Email}, nil
+}
+
+func (a *AuthServiceImpl) Login(ctx *gin.Context, userDto *dto.LoginUserRequest) (*dto.LoginUserResponse, errs.Error) {
+	if errValidate := a.Validate.Struct(userDto); errValidate != nil {
+		return nil, errs.NewBadRequestError(validationformatter.FormatValidationError(errValidate))
+	}
+
+	var userFound bool
+	var user userrepository.UserRoles
+
+	// check if user exists with findByEmail
+	if findByEmail, err := a.UserRepository.FindByEmail(ctx, a.DB, userDto.UsernameOrEmail); err != nil {
+		return nil, err
+	} else if findByEmail != nil {
+		userFound = true
+		user = *findByEmail
+	}
+
+	// if user still not found with findByEmail then check if user exists with findByUsername
+	if !userFound {
+		if findByUsername, err := a.UserRepository.FindByUsername(ctx, a.DB, userDto.UsernameOrEmail); err != nil {
+			return nil, err
+		} else if findByUsername != nil {
+			userFound = true
+			user = *findByUsername
+		}
+	}
+
+	// if user still not found then return error
+	if !userFound {
+		return nil, errs.NewBadRequestError("invalid login credential")
+	}
+
+	// check if password is valid
+	if passwordIsValid := user.ValidatePassword(userDto.Password); !passwordIsValid {
+		return nil, errs.NewBadRequestError("invalid login credential")
+	}
+
+	stringToken, errGenerateToken := jwt.GenerateToken(user)
+
+	if errGenerateToken != nil {
+		return nil, errs.NewInternalServerError("something went wrong")
+	}
+
+	return &dto.LoginUserResponse{Token: stringToken.(string)}, nil
 }

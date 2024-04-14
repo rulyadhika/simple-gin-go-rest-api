@@ -1,6 +1,8 @@
 package userrepository
 
-import "github.com/rulyadhika/simple-gin-go-rest-api/model/entity"
+import (
+	"github.com/rulyadhika/simple-gin-go-rest-api/model/entity"
+)
 
 type UserRole struct {
 	entity.User
@@ -9,7 +11,7 @@ type UserRole struct {
 
 type UserRoles struct {
 	entity.User
-	roles []entity.Role
+	Roles []entity.Role
 }
 
 func (u *UserRoles) HandleMappingUserRoles(userRole []UserRole) {
@@ -31,5 +33,5 @@ func (u *UserRoles) HandleMappingUserRoles(userRole []UserRole) {
 		})
 	}
 
-	u.roles = roles
+	u.Roles = roles
 }

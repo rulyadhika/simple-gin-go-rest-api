@@ -2,7 +2,6 @@ package userrepository
 
 import (
 	"database/sql"
-	"fmt"
 	"log"
 
 	"github.com/gin-gonic/gin"
@@ -126,8 +125,6 @@ func (a *UserRepositoryImpl) FindByUsername(ctx *gin.Context, db *sql.DB, userna
 
 	userRoles := UserRoles{}
 	userRoles.HandleMappingUserRoles(usersRoles)
-
-	fmt.Println(userRoles)
 
 	return &userRoles, nil
 }
