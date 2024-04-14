@@ -80,6 +80,11 @@ func (a *UserRepositoryImpl) FindByEmail(ctx *gin.Context, db *sql.DB, email str
 		usersRoles = append(usersRoles, userRole)
 	}
 
+	// if the result is empty
+	if len(usersRoles) == 0 {
+		return nil, nil
+	}
+
 	userRoles := UserRoles{}
 	userRoles.HandleMappingUserRoles(usersRoles)
 
@@ -112,6 +117,11 @@ func (a *UserRepositoryImpl) FindByUsername(ctx *gin.Context, db *sql.DB, userna
 		}
 
 		usersRoles = append(usersRoles, userRole)
+	}
+
+	// if the result is empty
+	if len(usersRoles) == 0 {
+		return nil, nil
 	}
 
 	userRoles := UserRoles{}
