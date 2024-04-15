@@ -3,6 +3,7 @@ package authservice
 import (
 	"database/sql"
 	"log"
+	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -53,13 +54,17 @@ func (a *AuthServiceImpl) Register(ctx *gin.Context, userDto *dto.RegisterUserRe
 	}
 
 	if findByEmail, err := a.UserRepository.FindByEmail(ctx, a.DB, user.Email); err != nil {
-		return nil, err
+		if err.Status() == http.StatusText(http.StatusInternalServerError) {
+			return nil, err
+		}
 	} else if findByEmail != nil {
 		return nil, errs.NewConflictError("email has already been taken")
 	}
 
 	if findByUsername, err := a.UserRepository.FindByUsername(ctx, a.DB, user.Username); err != nil {
-		return nil, err
+		if err.Status() == http.StatusText(http.StatusInternalServerError) {
+			return nil, err
+		}
 	} else if findByUsername != nil {
 		return nil, errs.NewConflictError("username has already been taken")
 	}
@@ -100,7 +105,9 @@ func (a *AuthServiceImpl) Login(ctx *gin.Context, userDto *dto.LoginUserRequest)
 
 	// check if user exists with findByEmail
 	if findByEmail, err := a.UserRepository.FindByEmail(ctx, a.DB, userDto.UsernameOrEmail); err != nil {
-		return nil, err
+		if err.Status() == http.StatusText(http.StatusInternalServerError) {
+			return nil, err
+		}
 	} else if findByEmail != nil {
 		userFound = true
 		user = *findByEmail
@@ -109,7 +116,9 @@ func (a *AuthServiceImpl) Login(ctx *gin.Context, userDto *dto.LoginUserRequest)
 	// if user still not found with findByEmail then check if user exists with findByUsername
 	if !userFound {
 		if findByUsername, err := a.UserRepository.FindByUsername(ctx, a.DB, userDto.UsernameOrEmail); err != nil {
-			return nil, err
+			if err.Status() == http.StatusText(http.StatusInternalServerError) {
+				return nil, err
+			}
 		} else if findByUsername != nil {
 			userFound = true
 			user = *findByUsername
