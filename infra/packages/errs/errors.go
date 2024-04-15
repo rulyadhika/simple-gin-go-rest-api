@@ -71,3 +71,21 @@ func NewUnprocessableEntityError(msg string) Error {
 		Data:          nil,
 	}
 }
+
+func NewUnauthorizedError(msg string) Error {
+	return &CustomError{
+		ErrStatusCode: http.StatusUnauthorized,
+		ErrStatus:     http.StatusText(http.StatusUnauthorized),
+		ErrMessage:    msg,
+		Data:          nil,
+	}
+}
+
+func NewForbiddenError(msg string) Error {
+	return &CustomError{
+		ErrStatusCode: http.StatusForbidden,
+		ErrStatus:     http.StatusText(http.StatusForbidden),
+		ErrMessage:    msg,
+		Data:          nil,
+	}
+}

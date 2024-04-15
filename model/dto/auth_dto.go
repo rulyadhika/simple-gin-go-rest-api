@@ -20,3 +20,11 @@ type LoginUserRequest struct {
 type LoginUserResponse struct {
 	Token string `json:"token"`
 }
+
+type RefreshTokenRequest struct {
+	Token string
+}
+
+type RefreshTokenResponse struct {
+	Token string `json:"token"`
+}

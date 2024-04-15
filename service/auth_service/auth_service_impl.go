@@ -3,9 +3,11 @@ package authservice
 import (
 	"database/sql"
 	"log"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
+	"github.com/rulyadhika/simple-gin-go-rest-api/infra/config"
 	"github.com/rulyadhika/simple-gin-go-rest-api/infra/packages/errs"
 	"github.com/rulyadhika/simple-gin-go-rest-api/infra/packages/jwt"
 	validationformatter "github.com/rulyadhika/simple-gin-go-rest-api/infra/packages/validation_formatter"
@@ -124,11 +126,42 @@ func (a *AuthServiceImpl) Login(ctx *gin.Context, userDto *dto.LoginUserRequest)
 		return nil, errs.NewBadRequestError("invalid login credential")
 	}
 
-	stringToken, errGenerateToken := jwt.GenerateToken(user)
+	appConfig := config.GetAppConfig()
 
+	accessToken, errGenerateToken := jwt.NewJWTToken(&user).GenerateToken(appConfig.ACCESS_TOKEN_SECRET, time.Now().Add(1*time.Minute))
 	if errGenerateToken != nil {
 		return nil, errs.NewInternalServerError("something went wrong")
 	}
 
-	return &dto.LoginUserResponse{Token: stringToken.(string)}, nil
+	refreshToken, errGenerateToken := jwt.NewJWTToken(&user).GenerateToken(appConfig.REFRESH_TOKEN_SECRET, time.Now().Add(24*time.Hour))
+	if errGenerateToken != nil {
+		return nil, errs.NewInternalServerError("something went wrong")
+	}
+
+	// set refresh token to cookies
+	ctx.SetCookie("refresh-token", refreshToken.(string), 24*60*60, "/", "", false, true) //max age: a day
+
+	return &dto.LoginUserResponse{Token: accessToken.(string)}, nil
+}
+
+func (a *AuthServiceImpl) RefreshToken(ctx *gin.Context, userDto *dto.RefreshTokenRequest) (*dto.RefreshTokenResponse, errs.Error) {
+	userData := jwt.NewJWTTokenParser()
+
+	if err := userData.ParseToken(userDto.Token, config.GetAppConfig().REFRESH_TOKEN_SECRET); err != nil {
+		return nil, errs.NewForbiddenError("token is invalid or expired")
+	}
+
+	user, err := a.UserRepository.FindById(ctx, a.DB, userData.Id)
+
+	if err != nil {
+		log.Printf("[RefreshToken - Service] err: user with id: %v not found\n", userData.Id)
+		return nil, errs.NewInternalServerError("something went wrong")
+	}
+
+	accessToken, errGenerateToken := jwt.NewJWTToken(user).GenerateToken(config.GetAppConfig().ACCESS_TOKEN_SECRET, time.Now().Add(1*time.Minute))
+	if errGenerateToken != nil {
+		return nil, errs.NewInternalServerError("something went wrong")
+	}
+
+	return &dto.RefreshTokenResponse{Token: accessToken.(string)}, nil
 }
