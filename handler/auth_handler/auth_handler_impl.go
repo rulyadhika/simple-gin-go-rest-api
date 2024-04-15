@@ -75,3 +75,33 @@ func (a *AuthHandlerImpl) Login(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, response)
 }
+
+func (a *AuthHandlerImpl) RefreshToken(ctx *gin.Context) {
+	refreshToken, errCookie := ctx.Cookie("refresh-token")
+
+	if errCookie != nil {
+		unauthorizedError := errs.NewUnauthorizedError("refresh-token cookie not present")
+		ctx.AbortWithStatusJSON(unauthorizedError.StatusCode(), unauthorizedError)
+		return
+	}
+
+	userDto := &dto.RefreshTokenRequest{
+		Token: refreshToken,
+	}
+
+	result, err := a.AuthService.RefreshToken(ctx, userDto)
+
+	if err != nil {
+		ctx.AbortWithStatusJSON(err.StatusCode(), err)
+		return
+	}
+
+	response := dto.ApiResponse{
+		StatusCode: http.StatusOK,
+		Status:     http.StatusText(http.StatusOK),
+		Message:    "successfully obtain a new access token",
+		Data:       result,
+	}
+
+	ctx.JSON(http.StatusOK, response)
+}

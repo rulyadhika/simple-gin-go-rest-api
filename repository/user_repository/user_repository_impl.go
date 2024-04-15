@@ -15,7 +15,7 @@ func NewUserRepositoryImpl() UserRepository {
 	return &UserRepositoryImpl{}
 }
 
-func (a *UserRepositoryImpl) Create(ctx *gin.Context, tx *sql.Tx, user entity.User) (*entity.User, errs.Error) {
+func (u *UserRepositoryImpl) Create(ctx *gin.Context, tx *sql.Tx, user entity.User) (*entity.User, errs.Error) {
 	sqlQuery := `INSERT INTO users(username, email, password) VALUES($1,$2,$3) RETURNING id`
 
 	err := tx.QueryRowContext(ctx, sqlQuery, user.Username, user.Email, user.Password).Scan(&user.Id)
@@ -28,7 +28,7 @@ func (a *UserRepositoryImpl) Create(ctx *gin.Context, tx *sql.Tx, user entity.Us
 	return &user, nil
 }
 
-func (a *UserRepositoryImpl) AssignRolesToUser(ctx *gin.Context, tx *sql.Tx, userRole []entity.UserRole) errs.Error {
+func (u *UserRepositoryImpl) AssignRolesToUser(ctx *gin.Context, tx *sql.Tx, userRole []entity.UserRole) errs.Error {
 	sqlQuery := `INSERT INTO users_roles(user_id, role_id) VALUES($1,$2)`
 	statement, err := tx.PrepareContext(ctx, sqlQuery)
 
@@ -51,7 +51,7 @@ func (a *UserRepositoryImpl) AssignRolesToUser(ctx *gin.Context, tx *sql.Tx, use
 	return nil
 }
 
-func (a *UserRepositoryImpl) FindByEmail(ctx *gin.Context, db *sql.DB, email string) (*UserRoles, errs.Error) {
+func (u *UserRepositoryImpl) FindByEmail(ctx *gin.Context, db *sql.DB, email string) (*UserRoles, errs.Error) {
 	sqlQuery := `SELECT users.id, username, email, password, users.created_at, users.updated_at, roles.id, roles.role_name
 	FROM users JOIN users_roles ON users.id=users_roles.user_id
 	JOIN roles on users_roles.role_id=roles.id WHERE email=$1`
@@ -90,7 +90,7 @@ func (a *UserRepositoryImpl) FindByEmail(ctx *gin.Context, db *sql.DB, email str
 	return &userRoles, nil
 }
 
-func (a *UserRepositoryImpl) FindByUsername(ctx *gin.Context, db *sql.DB, username string) (*UserRoles, errs.Error) {
+func (u *UserRepositoryImpl) FindByUsername(ctx *gin.Context, db *sql.DB, username string) (*UserRoles, errs.Error) {
 	sqlQuery := `SELECT users.id, username, email, password, users.created_at, users.updated_at, roles.id, roles.role_name
 	FROM users JOIN users_roles ON users.id=users_roles.user_id
 	JOIN roles on users_roles.role_id=roles.id WHERE username=$1`
@@ -112,6 +112,45 @@ func (a *UserRepositoryImpl) FindByUsername(ctx *gin.Context, db *sql.DB, userna
 
 		if err != nil {
 			log.Printf("[FindByUsername - Repo] err: %s", err.Error())
+			return nil, errs.NewInternalServerError("something went wrong")
+		}
+
+		usersRoles = append(usersRoles, userRole)
+	}
+
+	// if the result is empty
+	if len(usersRoles) == 0 {
+		return nil, nil
+	}
+
+	userRoles := UserRoles{}
+	userRoles.HandleMappingUserRoles(usersRoles)
+
+	return &userRoles, nil
+}
+
+func (u *UserRepositoryImpl) FindById(ctx *gin.Context, db *sql.DB, id uint32) (*UserRoles, errs.Error) {
+	sqlQuery := `SELECT users.id, username, email, password, users.created_at, users.updated_at, roles.id, roles.role_name
+	FROM users JOIN users_roles ON users.id=users_roles.user_id
+	JOIN roles on users_roles.role_id=roles.id WHERE users.id=$1`
+
+	rows, err := db.QueryContext(ctx, sqlQuery, id)
+
+	if err != nil {
+		log.Printf("[FindById - Repo] err: %s", err.Error())
+		return nil, errs.NewInternalServerError("something went wrong")
+	}
+
+	defer rows.Close()
+
+	usersRoles := []UserRole{}
+
+	for rows.Next() {
+		userRole := UserRole{}
+		err := rows.Scan(&userRole.User.Id, &userRole.Username, &userRole.Email, &userRole.Password, &userRole.CreatedAt, &userRole.UpdatedAt, &userRole.Role.Id, &userRole.RoleName)
+
+		if err != nil {
+			log.Printf("[FindById - Repo] err: %s", err.Error())
 			return nil, errs.NewInternalServerError("something went wrong")
 		}
 

@@ -10,5 +10,6 @@ func NewAuthRoutes(r *gin.Engine, handler authhandler.AuthHandler) {
 	{
 		authRoute.POST("/register", handler.Register)
 		authRoute.POST("/login", handler.Login)
+		authRoute.POST("/refresh", handler.RefreshToken)
 	}
 }
