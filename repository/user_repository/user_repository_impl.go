@@ -81,7 +81,7 @@ func (u *UserRepositoryImpl) FindByEmail(ctx *gin.Context, db *sql.DB, email str
 
 	// if the result is empty
 	if len(usersRoles) == 0 {
-		return nil, nil
+		return nil, errs.NewNotFoundError("user not found")
 	}
 
 	userRoles := UserRoles{}
@@ -120,7 +120,7 @@ func (u *UserRepositoryImpl) FindByUsername(ctx *gin.Context, db *sql.DB, userna
 
 	// if the result is empty
 	if len(usersRoles) == 0 {
-		return nil, nil
+		return nil, errs.NewNotFoundError("user not found")
 	}
 
 	userRoles := UserRoles{}
@@ -159,7 +159,7 @@ func (u *UserRepositoryImpl) FindById(ctx *gin.Context, db *sql.DB, id uint32) (
 
 	// if the result is empty
 	if len(usersRoles) == 0 {
-		return nil, nil
+		return nil, errs.NewNotFoundError("user not found")
 	}
 
 	userRoles := UserRoles{}
