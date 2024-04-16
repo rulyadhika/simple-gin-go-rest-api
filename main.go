@@ -19,7 +19,6 @@ func main() {
 	appConfig := config.GetAppConfig()
 	db := db.InitDB()
 	validator := validation.NewValidator()
-	authMiddleware := authmiddleware.NewAuthMiddlewareImpl()
 	app := gin.Default()
 
 	userRepository := userrepository.NewUserRepositoryImpl()
@@ -29,6 +28,10 @@ func main() {
 	ticketRepository := ticketrepository.NewTicketRepositoryImpl()
 	ticketService := ticketservice.NewTicketServiceImpl(ticketRepository, db, validator)
 	ticketHandler := tickethandler.NewTicketHandlerImpl(ticketService)
+
+	// middlewares
+	authMiddleware := authmiddleware.NewAuthMiddlewareImpl(ticketRepository, db)
+	// end of middlewares
 
 	// routes
 	routes.NewAuthRoutes(app, authHandler)

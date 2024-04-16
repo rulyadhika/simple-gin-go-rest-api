@@ -11,5 +11,9 @@ func NewTicketRoutes(r *gin.Engine, handler tickethandler.TicketHandler, authMid
 	{
 		ticketGroup.Use(authMiddleware.Authentication())
 		ticketGroup.POST("/", handler.Create)
+		ticketGroup.GET("/", handler.FindAll)
+
+		ticketGroup.Use(authMiddleware.AuthorizationTicket())
+		ticketGroup.GET("/:ticketId", handler.FindOneByTicketId)
 	}
 }

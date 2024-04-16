@@ -24,3 +24,22 @@ type NewTicketResponse struct {
 	CreatedAt   time.Time             `json:"created_at"`
 	UpdatedAt   time.Time             `json:"updated_at"`
 }
+
+type TicketResponse struct {
+	Id          uint32                 `json:"id"`
+	TicketId    string                 `json:"ticket_id"`
+	Title       string                 `json:"title"`
+	Description string                 `json:"description"`
+	Priority    entity.TicketPriority  `json:"priority"`
+	Status      entity.TicketStatus    `json:"status"`
+	CreatedBy   TicketResponseUserData `json:"created_by"`
+	AssignTo    TicketResponseUserData `json:"assign_to"`
+	AssignBy    TicketResponseUserData `json:"assign_by"`
+	CreatedAt   time.Time              `json:"created_at"`
+	UpdatedAt   time.Time              `json:"updated_at"`
+}
+
+type TicketResponseUserData struct {
+	Username string `json:"username"`
+	Email    string `json:"email"`
+}

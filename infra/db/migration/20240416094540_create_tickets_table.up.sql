@@ -8,14 +8,14 @@ CREATE TABLE IF NOT EXISTS tickets(
     description TEXT NOT NULL,
     priority TicketPriority NOT NULL,
     status TicketStatus NOT NULL,
-    assigned_to INT DEFAULT NULL,
-    assigned_by  INT DEFAULT NULL,
+    assign_to INT DEFAULT NULL,
+    assign_by  INT DEFAULT NULL,
     created_by   INT NOT NULL,
     created_at TIMESTAMPTZ DEFAULT now(),
     updated_at TIMESTAMPTZ DEFAULT now(),
-    FOREIGN KEY(assigned_to)
+    FOREIGN KEY(assign_to)
         REFERENCES users(id),
-    FOREIGN KEY(assigned_by)
+    FOREIGN KEY(assign_by)
         REFERENCES users(id),
     FOREIGN KEY(created_by)
         REFERENCES users(id)

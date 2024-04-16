@@ -8,4 +8,6 @@ import (
 
 type TicketService interface {
 	Create(ctx *gin.Context, ticketDto dto.NewTicketRequest) (*dto.NewTicketResponse, errs.Error)
+	FindAll(ctx *gin.Context, userId uint32, userRoles []string) (*[]dto.TicketResponse, errs.Error)
+	FindOneByTicketId(ctx *gin.Context, ticketId string) (*dto.TicketResponse, errs.Error)
 }
