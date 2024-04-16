@@ -8,6 +8,15 @@ import (
 	userrepository "github.com/rulyadhika/simple-gin-go-rest-api/repository/user_repository"
 )
 
+type jwtToken struct {
+	Id       uint32           `json:"id"`
+	Username string           `json:"username"`
+	Email    string           `json:"email"`
+	Roles    []string         `json:"roles"`
+	Exp      *jwt.NumericDate `json:"exp"`
+	Iat      *jwt.NumericDate `json:"iat"`
+}
+
 func NewJWTToken(userData *userrepository.UserRoles) *jwtToken {
 	timeIssuedAt := jwt.NewNumericDate(time.Now())
 

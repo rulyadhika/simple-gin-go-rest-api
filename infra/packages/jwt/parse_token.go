@@ -7,11 +7,18 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-func NewJWTTokenParser() *jwtToken {
-	return &jwtToken{}
+type JWTPayload struct {
+	Id       uint32   `json:"id"`
+	Username string   `json:"username"`
+	Email    string   `json:"email"`
+	Roles    []string `json:"roles"`
 }
 
-func (j *jwtToken) ParseToken(tokenString string, secretKey string) error {
+func NewJWTTokenParser() *JWTPayload {
+	return &JWTPayload{}
+}
+
+func (j *JWTPayload) ParseToken(tokenString string, secretKey string) error {
 	token, errParse := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, errors.New("invalid token")
@@ -33,7 +40,7 @@ func (j *jwtToken) ParseToken(tokenString string, secretKey string) error {
 	return nil
 }
 
-func (j *jwtToken) bindTokenToStruct(token *jwt.Token) error {
+func (j *JWTPayload) bindTokenToStruct(token *jwt.Token) error {
 	var claims jwt.MapClaims
 
 	if mapClaims, ok := token.Claims.(jwt.MapClaims); ok {
@@ -51,8 +58,6 @@ func (j *jwtToken) bindTokenToStruct(token *jwt.Token) error {
 	j.Email = claims["email"].(string)
 	j.Username = claims["username"].(string)
 	j.Roles = roles
-	j.Iat, _ = claims.GetIssuedAt()
-	j.Exp, _ = claims.GetExpirationTime()
 
 	return nil
 }
