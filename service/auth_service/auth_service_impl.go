@@ -137,12 +137,12 @@ func (a *AuthServiceImpl) Login(ctx *gin.Context, userDto *dto.LoginUserRequest)
 
 	appConfig := config.GetAppConfig()
 
-	accessToken, errGenerateToken := jwt.NewJWTToken(&user).GenerateToken(appConfig.ACCESS_TOKEN_SECRET, time.Now().Add(1*time.Minute))
+	accessToken, errGenerateToken := jwt.NewJWTToken(&user).GenerateToken(appConfig.ACCESS_TOKEN_SECRET, time.Now().Add(appConfig.ACCESS_TOKEN_EXPIRATION_DURATION))
 	if errGenerateToken != nil {
 		return nil, errs.NewInternalServerError("something went wrong")
 	}
 
-	refreshToken, errGenerateToken := jwt.NewJWTToken(&user).GenerateToken(appConfig.REFRESH_TOKEN_SECRET, time.Now().Add(24*time.Hour))
+	refreshToken, errGenerateToken := jwt.NewJWTToken(&user).GenerateToken(appConfig.REFRESH_TOKEN_SECRET, time.Now().Add(appConfig.REFRESH_TOKEN_EXPIRATION_DURATION))
 	if errGenerateToken != nil {
 		return nil, errs.NewInternalServerError("something went wrong")
 	}
@@ -167,7 +167,7 @@ func (a *AuthServiceImpl) RefreshToken(ctx *gin.Context, userDto *dto.RefreshTok
 		return nil, errs.NewInternalServerError("something went wrong")
 	}
 
-	accessToken, errGenerateToken := jwt.NewJWTToken(user).GenerateToken(config.GetAppConfig().ACCESS_TOKEN_SECRET, time.Now().Add(1*time.Minute))
+	accessToken, errGenerateToken := jwt.NewJWTToken(user).GenerateToken(config.GetAppConfig().ACCESS_TOKEN_SECRET, time.Now().Add(config.GetAppConfig().REFRESH_TOKEN_EXPIRATION_DURATION))
 	if errGenerateToken != nil {
 		return nil, errs.NewInternalServerError("something went wrong")
 	}
