@@ -16,6 +16,7 @@ import (
 type AuthMiddleware interface {
 	Authentication() gin.HandlerFunc
 	AuthorizationTicket() gin.HandlerFunc
+	RoleAuthorization(rolesAllowed []string) gin.HandlerFunc
 }
 
 type AuthMiddlewareImpl struct {
@@ -87,6 +88,35 @@ func (a *AuthMiddlewareImpl) AuthorizationTicket() gin.HandlerFunc {
 				ctx.AbortWithStatusJSON(forbiddenErr.StatusCode(), forbiddenErr)
 				return
 			}
+		}
+
+		ctx.Next()
+	}
+}
+
+func (a *AuthMiddlewareImpl) RoleAuthorization(rolesAllowed []string) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		userData, ok := ctx.MustGet("userData").(*jwt.JWTPayload)
+
+		_ = userData
+
+		if !ok {
+			log.Printf("[RoleAuthorization - Middleware] err: %s\n", "failed type casting to '*jwt.JWTPayload'")
+			internalServerErr := errs.NewInternalServerError("something went wrong")
+			ctx.AbortWithStatusJSON(internalServerErr.StatusCode(), internalServerErr)
+			return
+		}
+
+		userIsEligible := []bool{}
+
+		for _, r := range userData.Roles {
+			userIsEligible = append(userIsEligible, slices.Contains(rolesAllowed, r))
+		}
+
+		if !slices.Contains(userIsEligible, true) {
+			forbiddenErr := errs.NewForbiddenError("you are not authorized to access/modify this data")
+			ctx.AbortWithStatusJSON(forbiddenErr.StatusCode(), forbiddenErr)
+			return
 		}
 
 		ctx.Next()
