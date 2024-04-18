@@ -1,12 +1,12 @@
 package entity
 
-type userRole uint32
+type userRole string
 
 const (
-	Role_ADMINISTRATOR      userRole = 1
-	Role_SUPPORT_SUPERVISOR userRole = 2
-	Role_SUPPORT_AGENT      userRole = 3
-	Role_CLIENT             userRole = 4
+	Role_ADMINISTRATOR      userRole = "administrator"
+	Role_SUPPORT_SUPERVISOR userRole = "support supervisor"
+	Role_SUPPORT_AGENT      userRole = "support agent"
+	Role_CLIENT             userRole = "client"
 )
 
 type Role struct {

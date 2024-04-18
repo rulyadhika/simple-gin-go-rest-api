@@ -8,8 +8,10 @@ import (
 	"github.com/rulyadhika/simple-gin-go-rest-api/infra/db"
 	authmiddleware "github.com/rulyadhika/simple-gin-go-rest-api/infra/middleware/auth_middleware"
 	"github.com/rulyadhika/simple-gin-go-rest-api/infra/packages/validation"
+	rolerepository "github.com/rulyadhika/simple-gin-go-rest-api/repository/role_repository"
 	ticketrepository "github.com/rulyadhika/simple-gin-go-rest-api/repository/ticket_repository"
 	userrepository "github.com/rulyadhika/simple-gin-go-rest-api/repository/user_repository"
+	userrolerepository "github.com/rulyadhika/simple-gin-go-rest-api/repository/user_role_repository"
 	"github.com/rulyadhika/simple-gin-go-rest-api/routes"
 	authservice "github.com/rulyadhika/simple-gin-go-rest-api/service/auth_service"
 	ticketservice "github.com/rulyadhika/simple-gin-go-rest-api/service/ticket_service"
@@ -22,7 +24,9 @@ func main() {
 	app := gin.Default()
 
 	userRepository := userrepository.NewUserRepositoryImpl()
-	authService := authservice.NewAuthServiceImpl(userRepository, db, validator)
+	userRoleRepository := userrolerepository.NewUserRoleRepositoryImpl()
+	roleRepository := rolerepository.NewRoleRepositoryImpl()
+	authService := authservice.NewAuthServiceImpl(userRepository, userRoleRepository, roleRepository, db, validator)
 	authHandler := authhandler.NewAuthHandlerImpl(authService)
 
 	ticketRepository := ticketrepository.NewTicketRepositoryImpl()
