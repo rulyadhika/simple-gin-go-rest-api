@@ -14,20 +14,26 @@ import (
 	validationformatter "github.com/rulyadhika/simple-gin-go-rest-api/infra/packages/validation_formatter"
 	"github.com/rulyadhika/simple-gin-go-rest-api/model/dto"
 	"github.com/rulyadhika/simple-gin-go-rest-api/model/entity"
+	rolerepository "github.com/rulyadhika/simple-gin-go-rest-api/repository/role_repository"
 	userrepository "github.com/rulyadhika/simple-gin-go-rest-api/repository/user_repository"
+	userrolerepository "github.com/rulyadhika/simple-gin-go-rest-api/repository/user_role_repository"
 )
 
 type AuthServiceImpl struct {
-	UserRepository userrepository.UserRepository
-	DB             *sql.DB
-	Validate       *validator.Validate
+	UserRepository     userrepository.UserRepository
+	DB                 *sql.DB
+	Validate           *validator.Validate
+	UserRoleRepository userrolerepository.UserRoleRepository
+	RoleRepository     rolerepository.RoleRepository
 }
 
-func NewAuthServiceImpl(userRepository userrepository.UserRepository, db *sql.DB, validator *validator.Validate) AuthService {
+func NewAuthServiceImpl(userRepository userrepository.UserRepository, userRoleRepository userrolerepository.UserRoleRepository, roleRepository rolerepository.RoleRepository, db *sql.DB, validator *validator.Validate) AuthService {
 	return &AuthServiceImpl{
-		UserRepository: userRepository,
-		DB:             db,
-		Validate:       validator,
+		UserRepository:     userRepository,
+		DB:                 db,
+		Validate:           validator,
+		UserRoleRepository: userRoleRepository,
+		RoleRepository:     roleRepository,
 	}
 }
 
@@ -79,10 +85,19 @@ func (a *AuthServiceImpl) Register(ctx *gin.Context, userDto *dto.RegisterUserRe
 		return nil, err
 	}
 
-	usersRole := []entity.UserRole{}
-	usersRole = append(usersRole, entity.UserRole{UserId: result.Id, RoleId: uint32(entity.Role_CLIENT)})
+	// create new user with client roles
+	roles, err := a.RoleRepository.FindRolesByName(ctx, a.DB, []string{"client"})
+	if err != nil {
+		return nil, err
+	}
 
-	err = a.UserRepository.AssignRolesToUser(ctx, tx, usersRole)
+	userRoles := []entity.UserRole{}
+
+	for _, role := range *roles {
+		userRoles = append(userRoles, entity.UserRole{UserId: result.Id, RoleId: role.Id})
+	}
+
+	err = a.UserRoleRepository.AssignRolesToUser(ctx, tx, userRoles)
 	if err != nil {
 		return nil, err
 	}
