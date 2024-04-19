@@ -12,18 +12,21 @@ import (
 	"github.com/rulyadhika/simple-gin-go-rest-api/model/dto"
 	"github.com/rulyadhika/simple-gin-go-rest-api/model/entity"
 	ticketrepository "github.com/rulyadhika/simple-gin-go-rest-api/repository/ticket_repository"
+	userrepository "github.com/rulyadhika/simple-gin-go-rest-api/repository/user_repository"
 )
 
 type ticketServiceImpl struct {
 	db        *sql.DB
 	tr        ticketrepository.TicketRepository
+	ur        userrepository.UserRepository
 	validator *validator.Validate
 }
 
-func NewTicketServiceImpl(tr ticketrepository.TicketRepository, db *sql.DB, validator *validator.Validate) TicketService {
+func NewTicketServiceImpl(tr ticketrepository.TicketRepository, ur userrepository.UserRepository, db *sql.DB, validator *validator.Validate) TicketService {
 	return &ticketServiceImpl{
 		db,
 		tr,
+		ur,
 		validator,
 	}
 }
@@ -144,4 +147,59 @@ func (t *ticketServiceImpl) FindOneByTicketId(ctx *gin.Context, ticketId string)
 	}
 
 	return &ticketResponse, nil
+}
+
+func (t *ticketServiceImpl) AssignTicketToUser(ctx *gin.Context, ticketDto dto.AssignTicketToUserRequest) (*dto.TicketResponse, errs.Error) {
+	ticket := entity.Ticket{
+		TicketId: ticketDto.TicketId,
+		AssignTo: ticketDto.AssignToId,
+		AssignBy: ticketDto.AssignById,
+		Status:   entity.TicketStatus_IN_PROGRESS,
+	}
+
+	user, err := t.ur.FindById(ctx, t.db, ticket.AssignTo)
+	if err != nil {
+		return nil, err
+	}
+
+	userRoles := []string{}
+	for _, role := range user.Roles {
+		userRoles = append(userRoles, role.RoleName)
+	}
+
+	if isSupportAgent := slices.Contains(userRoles, string(entity.Role_SUPPORT_AGENT)); !isSupportAgent {
+		return nil, errs.NewConflictError("user is not a support agent")
+	}
+
+	result, err := t.tr.AssignTicketToUser(ctx, t.db, ticket)
+
+	if err != nil {
+		return nil, err
+	}
+
+	ticketResponse := dto.TicketResponse{
+		Id:          result.Id,
+		TicketId:    result.TicketId,
+		Title:       result.Title,
+		Description: result.Description,
+		Priority:    result.Priority,
+		Status:      result.Status,
+		CreatedBy: dto.TicketResponseUserData{
+			Username: result.CreatedBy.Username.String,
+			Email:    result.CreatedBy.Email.String,
+		},
+		AssignTo: dto.TicketResponseUserData{
+			Username: result.AssignTo.Username.String,
+			Email:    result.AssignTo.Email.String,
+		},
+		AssignBy: dto.TicketResponseUserData{
+			Username: result.AssignBy.Username.String,
+			Email:    result.AssignBy.Email.String,
+		},
+		CreatedAt: result.CreatedAt,
+		UpdatedAt: result.UpdatedAt,
+	}
+
+	return &ticketResponse, nil
+
 }

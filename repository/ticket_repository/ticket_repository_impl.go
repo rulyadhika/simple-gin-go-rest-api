@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"log"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/rulyadhika/simple-gin-go-rest-api/infra/packages/errs"
@@ -136,5 +137,39 @@ func (t *ticketRepositoryImpl) FindOneByTicketId(ctx *gin.Context, db *sql.DB, t
 
 		return nil, errs.NewInternalServerError("something went wrong")
 	}
+	return &ticketUser, nil
+}
+
+func (t *ticketRepositoryImpl) AssignTicketToUser(ctx *gin.Context, db *sql.DB, ticket entity.Ticket) (*TicketUser, errs.Error) {
+	sqlQuery := `UPDATE tickets SET assign_to=$1, assign_by=$2, status=$3, updated_at=$4 WHERE ticket_id=$5 RETURNING id`
+
+	if err := db.QueryRowContext(ctx, sqlQuery, ticket.AssignTo, ticket.AssignBy, ticket.Status, time.Now(), ticket.TicketId).Scan(&ticket.Id); err != nil {
+		log.Printf("[AssignTicketToUser - Repo], err: %s\n", err.Error())
+
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, errs.NewNotFoundError("ticket not found")
+		}
+
+		return nil, errs.NewInternalServerError("something went wrong")
+	}
+
+	queryGetData := `SELECT tickets.id, ticket_id, title, description, priority, status, tickets.created_at, tickets.updated_at,
+	a.username, a.email, b.username, b.email, c.username, c.email
+	FROM tickets JOIN users AS a ON tickets.created_by = a.id
+	LEFT JOIN users AS b ON tickets.assign_to = b.id
+	LEFT JOIN users AS c ON tickets.assign_by = c.id 
+	WHERE tickets.ticket_id = $1`
+
+	ticketUser := TicketUser{}
+
+	err := db.QueryRowContext(ctx, queryGetData, ticket.TicketId).Scan(&ticketUser.Id, &ticketUser.TicketId, &ticketUser.Title, &ticketUser.Description, &ticketUser.Priority, &ticketUser.Status,
+		&ticketUser.CreatedAt, &ticketUser.UpdatedAt, &ticketUser.CreatedBy.Username, &ticketUser.CreatedBy.Email,
+		&ticketUser.AssignTo.Username, &ticketUser.AssignTo.Email, &ticketUser.AssignBy.Username, &ticketUser.AssignBy.Email)
+
+	if err != nil {
+		log.Printf("[AssignTicketToUser - Repo], err: %s\n", err.Error())
+		return nil, errs.NewInternalServerError("something went wrong")
+	}
+
 	return &ticketUser, nil
 }

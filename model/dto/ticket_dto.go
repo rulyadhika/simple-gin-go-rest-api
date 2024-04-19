@@ -45,7 +45,7 @@ type TicketResponseUserData struct {
 }
 
 type AssignTicketToUserRequest struct {
-	TicketId   uint32
+	TicketId   string
 	AssignToId uint32
 	AssignById uint32
 }

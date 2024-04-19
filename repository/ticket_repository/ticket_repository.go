@@ -13,4 +13,5 @@ type TicketRepository interface {
 	FindAll(ctx *gin.Context, db *sql.DB) (*[]TicketUser, errs.Error)
 	FindAllByUserId(ctx *gin.Context, db *sql.DB, userId uint32) (*[]TicketUser, errs.Error)
 	FindOneByTicketId(ctx *gin.Context, db *sql.DB, ticketId string) (*TicketUser, errs.Error)
+	AssignTicketToUser(ctx *gin.Context, db *sql.DB, ticket entity.Ticket) (*TicketUser, errs.Error)
 }

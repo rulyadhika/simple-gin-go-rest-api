@@ -3,6 +3,8 @@ package tickethandler
 import (
 	"log"
 	"net/http"
+	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/rulyadhika/simple-gin-go-rest-api/infra/packages/errs"
@@ -30,7 +32,15 @@ func (t *ticketHandlerImpl) Create(ctx *gin.Context) {
 		return
 	}
 
-	userData := ctx.MustGet("userData").(*jwt.JWTPayload)
+	userData, ok := ctx.MustGet("userData").(*jwt.JWTPayload)
+
+	if !ok {
+		log.Printf("[CreateTicket - Handler] err: %s\n", "failed type casting to '*jwt.JWTPayload'")
+		internalServerErr := errs.NewInternalServerError("something went wrong")
+		ctx.AbortWithStatusJSON(internalServerErr.StatusCode(), internalServerErr)
+		return
+	}
+
 	ticketDto.CreatedBy = userData.Id
 
 	result, err := t.ts.Create(ctx, *ticketDto)
@@ -98,5 +108,49 @@ func (t *ticketHandlerImpl) FindOneByTicketId(ctx *gin.Context) {
 }
 
 func (t *ticketHandlerImpl) AssignTicketToUser(ctx *gin.Context) {
-	panic("not implemented") // TODO: Implement
+	user, ok := ctx.MustGet("userData").(*jwt.JWTPayload)
+
+	if !ok {
+		log.Printf("[AssignTicketToUser - Handler] err: %s\n", "failed type casting to '*jwt.JWTPayload'")
+		internalServerErr := errs.NewInternalServerError("something went wrong")
+		ctx.AbortWithStatusJSON(internalServerErr.StatusCode(), internalServerErr)
+		return
+	}
+
+	ticketId := strings.TrimSpace(ctx.Param("ticketId"))
+	if ticketId == "" {
+		unprocessableEntityError := errs.NewUnprocessableEntityError("param ticketId must be a valid string")
+		ctx.AbortWithStatusJSON(unprocessableEntityError.StatusCode(), unprocessableEntityError)
+		return
+	}
+
+	userId, errConvert := strconv.Atoi(ctx.Param("userId"))
+	if errConvert != nil {
+		log.Printf("[AssignTicketToUser - Handler], err: %s\n", errConvert.Error())
+		unprocessableEntityError := errs.NewUnprocessableEntityError("param userId must be a number")
+		ctx.AbortWithStatusJSON(unprocessableEntityError.StatusCode(), unprocessableEntityError)
+		return
+	}
+
+	ticketDto := &dto.AssignTicketToUserRequest{
+		TicketId:   ticketId,
+		AssignToId: uint32(userId),
+		AssignById: user.Id,
+	}
+
+	result, err := t.ts.AssignTicketToUser(ctx, *ticketDto)
+	if err != nil {
+		ctx.AbortWithStatusJSON(err.StatusCode(), err)
+		return
+	}
+
+	response := &dto.ApiResponse{
+		StatusCode: http.StatusOK,
+		Status:     http.StatusText(http.StatusOK),
+		Message:    "successfully asign ticket to support agent",
+		Data:       result,
+	}
+
+	ctx.JSON(http.StatusOK, response)
+
 }
