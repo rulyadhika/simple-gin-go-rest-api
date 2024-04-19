@@ -96,3 +96,7 @@ func (t *ticketHandlerImpl) FindOneByTicketId(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, response)
 }
+
+func (t *ticketHandlerImpl) AssignTicketToUser(ctx *gin.Context) {
+	panic("not implemented") // TODO: Implement
+}

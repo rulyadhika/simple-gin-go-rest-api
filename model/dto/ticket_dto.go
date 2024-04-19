@@ -43,3 +43,9 @@ type TicketResponseUserData struct {
 	Username string `json:"username"`
 	Email    string `json:"email"`
 }
+
+type AssignTicketToUserRequest struct {
+	TicketId   uint32
+	AssignToId uint32
+	AssignById uint32
+}
