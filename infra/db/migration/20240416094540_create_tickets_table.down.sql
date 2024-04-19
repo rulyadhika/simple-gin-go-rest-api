@@ -1,0 +1,3 @@
+DROP TABLE IF EXISTS tickets;
+DROP TYPE IF EXISTS TicketPriority;
+DROP TYPE IF EXISTS TicketStatus;
