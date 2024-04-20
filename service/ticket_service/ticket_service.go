@@ -12,4 +12,5 @@ type TicketService interface {
 	FindAll(ctx *gin.Context, userId uint32, userRoles []entity.UserType) (*[]dto.TicketResponse, errs.Error)
 	FindOneByTicketId(ctx *gin.Context, ticketId string) (*dto.TicketResponse, errs.Error)
 	AssignTicketToUser(ctx *gin.Context, ticketDto dto.AssignTicketToUserRequest) (*dto.TicketResponse, errs.Error)
+	UpdateTicketStatus(ctx *gin.Context, ticketDto dto.UpdateTicketStatusRequest, userRoles []entity.UserType) (*dto.TicketResponse, errs.Error)
 }

@@ -49,3 +49,8 @@ type AssignTicketToUserRequest struct {
 	AssignToId uint32
 	AssignById uint32
 }
+
+type UpdateTicketStatusRequest struct {
+	TicketId string
+	Status   entity.TicketStatus `json:"status" validate:"required,ticket_status_custom_validation"`
+}

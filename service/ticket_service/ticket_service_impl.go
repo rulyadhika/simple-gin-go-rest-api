@@ -203,3 +203,51 @@ func (t *ticketServiceImpl) AssignTicketToUser(ctx *gin.Context, ticketDto dto.A
 	return &ticketResponse, nil
 
 }
+
+func (t *ticketServiceImpl) UpdateTicketStatus(ctx *gin.Context, ticketDto dto.UpdateTicketStatusRequest, userRoles []entity.UserType) (*dto.TicketResponse, errs.Error) {
+	if validationErr := t.validator.Struct(ticketDto); validationErr != nil {
+		return nil, errs.NewBadRequestError(validationformatter.FormatValidationError(validationErr))
+	}
+
+	ticket := entity.Ticket{
+		TicketId: ticketDto.TicketId,
+		Status:   ticketDto.Status,
+	}
+
+	// check whether the user is eligible to update ticket status based on their roles and what ticket status choosen
+	// entity.Role_SUPPORT_SUPERVISOR is only allowed to change ticket status to entity.TicketStatus_CLOSED
+	// entity.Role_CLIENT is only allowed to change ticket status to entity.TicketStatus_RESOLVED
+	if eligible := slices.Contains(userRoles, entity.Role_SUPPORT_SUPERVISOR) && ticket.Status == entity.TicketStatus_CLOSED || slices.Contains(userRoles, entity.Role_CLIENT) && ticket.Status == entity.TicketStatus_RESOLVED; !eligible {
+		return nil, errs.NewForbiddenError("you're not allowed to change this support ticket status to: " + string(ticket.Status))
+	}
+
+	result, err := t.tr.UpdateTicketStatus(ctx, t.db, ticket)
+	if err != nil {
+		return nil, err
+	}
+
+	ticketResponse := dto.TicketResponse{
+		Id:          result.Id,
+		TicketId:    result.TicketId,
+		Title:       result.Title,
+		Description: result.Description,
+		Priority:    result.Priority,
+		Status:      result.Status,
+		CreatedBy: dto.TicketResponseUserData{
+			Username: result.CreatedBy.Username.String,
+			Email:    result.CreatedBy.Email.String,
+		},
+		AssignTo: dto.TicketResponseUserData{
+			Username: result.AssignTo.Username.String,
+			Email:    result.AssignTo.Email.String,
+		},
+		AssignBy: dto.TicketResponseUserData{
+			Username: result.AssignBy.Username.String,
+			Email:    result.AssignBy.Email.String,
+		},
+		CreatedAt: result.CreatedAt,
+		UpdatedAt: result.UpdatedAt,
+	}
+
+	return &ticketResponse, nil
+}

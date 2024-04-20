@@ -154,3 +154,45 @@ func (t *ticketHandlerImpl) AssignTicketToUser(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, response)
 
 }
+
+func (t *ticketHandlerImpl) UpdateTicketStatus(ctx *gin.Context) {
+	ticketDto := &dto.UpdateTicketStatusRequest{}
+
+	if err := ctx.ShouldBindJSON(ticketDto); err != nil {
+		unprocessableEntityError := errs.NewUnprocessableEntityError("invalid json request body")
+		ctx.AbortWithStatusJSON(unprocessableEntityError.StatusCode(), unprocessableEntityError)
+		return
+	}
+
+	user, ok := ctx.MustGet("userData").(*jwt.JWTPayload)
+
+	if !ok {
+		log.Printf("[UpdateTicketStatus - Handler] err: %s\n", "failed type casting to '*jwt.JWTPayload'")
+		internalServerErr := errs.NewInternalServerError("something went wrong")
+		ctx.AbortWithStatusJSON(internalServerErr.StatusCode(), internalServerErr)
+		return
+	}
+
+	ticketId := strings.TrimSpace(ctx.Param("ticketId"))
+	if ticketId == "" {
+		unprocessableEntityError := errs.NewUnprocessableEntityError("param ticketId must be a valid string")
+		ctx.AbortWithStatusJSON(unprocessableEntityError.StatusCode(), unprocessableEntityError)
+		return
+	}
+	ticketDto.TicketId = ticketId
+
+	result, err := t.ts.UpdateTicketStatus(ctx, *ticketDto, user.Roles)
+	if err != nil {
+		ctx.AbortWithStatusJSON(err.StatusCode(), err)
+		return
+	}
+
+	response := &dto.ApiResponse{
+		StatusCode: http.StatusOK,
+		Status:     http.StatusText(http.StatusOK),
+		Message:    "successfully update ticket status",
+		Data:       result,
+	}
+
+	ctx.JSON(http.StatusOK, response)
+}
