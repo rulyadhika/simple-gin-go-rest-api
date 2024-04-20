@@ -10,13 +10,14 @@ import (
 	"github.com/rulyadhika/simple-gin-go-rest-api/infra/config"
 	"github.com/rulyadhika/simple-gin-go-rest-api/infra/packages/errs"
 	"github.com/rulyadhika/simple-gin-go-rest-api/infra/packages/jwt"
+	"github.com/rulyadhika/simple-gin-go-rest-api/model/entity"
 	ticketrepository "github.com/rulyadhika/simple-gin-go-rest-api/repository/ticket_repository"
 )
 
 type AuthMiddleware interface {
 	Authentication() gin.HandlerFunc
 	AuthorizationTicket() gin.HandlerFunc
-	RoleAuthorization(rolesAllowed []string) gin.HandlerFunc
+	RoleAuthorization(rolesAllowed ...entity.UserType) gin.HandlerFunc
 }
 
 type AuthMiddlewareImpl struct {
@@ -94,7 +95,7 @@ func (a *AuthMiddlewareImpl) AuthorizationTicket() gin.HandlerFunc {
 	}
 }
 
-func (a *AuthMiddlewareImpl) RoleAuthorization(rolesAllowed []string) gin.HandlerFunc {
+func (a *AuthMiddlewareImpl) RoleAuthorization(rolesAllowed ...entity.UserType) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		userData, ok := ctx.MustGet("userData").(*jwt.JWTPayload)
 

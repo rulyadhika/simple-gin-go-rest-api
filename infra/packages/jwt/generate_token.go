@@ -5,22 +5,23 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/rulyadhika/simple-gin-go-rest-api/model/entity"
 	userrepository "github.com/rulyadhika/simple-gin-go-rest-api/repository/user_repository"
 )
 
 type jwtToken struct {
-	Id       uint32           `json:"id"`
-	Username string           `json:"username"`
-	Email    string           `json:"email"`
-	Roles    []string         `json:"roles"`
-	Exp      *jwt.NumericDate `json:"exp"`
-	Iat      *jwt.NumericDate `json:"iat"`
+	Id       uint32            `json:"id"`
+	Username string            `json:"username"`
+	Email    string            `json:"email"`
+	Roles    []entity.UserType `json:"roles"`
+	Exp      *jwt.NumericDate  `json:"exp"`
+	Iat      *jwt.NumericDate  `json:"iat"`
 }
 
 func NewJWTToken(userData *userrepository.UserRoles) *jwtToken {
 	timeIssuedAt := jwt.NewNumericDate(time.Now())
 
-	userRoles := []string{}
+	userRoles := []entity.UserType{}
 
 	for _, role := range userData.Roles {
 		userRoles = append(userRoles, role.RoleName)

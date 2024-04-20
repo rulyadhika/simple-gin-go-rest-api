@@ -1,15 +1,19 @@
 package entity
 
-type userRole string
+type UserType string
+
+func (u *UserType) ToString() string {
+	return string(*u)
+}
 
 const (
-	Role_ADMINISTRATOR      userRole = "administrator"
-	Role_SUPPORT_SUPERVISOR userRole = "support supervisor"
-	Role_SUPPORT_AGENT      userRole = "support agent"
-	Role_CLIENT             userRole = "client"
+	Role_ADMINISTRATOR      UserType = "administrator"
+	Role_SUPPORT_SUPERVISOR UserType = "support supervisor"
+	Role_SUPPORT_AGENT      UserType = "support agent"
+	Role_CLIENT             UserType = "client"
 )
 
 type Role struct {
 	Id       uint32
-	RoleName string
+	RoleName UserType
 }

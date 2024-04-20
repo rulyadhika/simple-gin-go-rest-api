@@ -67,7 +67,7 @@ func (t *ticketServiceImpl) Create(ctx *gin.Context, ticketDto dto.NewTicketRequ
 	}, nil
 }
 
-func (t *ticketServiceImpl) FindAll(ctx *gin.Context, userId uint32, userRoles []string) (*[]dto.TicketResponse, errs.Error) {
+func (t *ticketServiceImpl) FindAll(ctx *gin.Context, userId uint32, userRoles []entity.UserType) (*[]dto.TicketResponse, errs.Error) {
 	var result *[]ticketrepository.TicketUser
 	var err errs.Error
 
@@ -162,12 +162,12 @@ func (t *ticketServiceImpl) AssignTicketToUser(ctx *gin.Context, ticketDto dto.A
 		return nil, err
 	}
 
-	userRoles := []string{}
+	userRoles := []entity.UserType{}
 	for _, role := range user.Roles {
 		userRoles = append(userRoles, role.RoleName)
 	}
 
-	if isSupportAgent := slices.Contains(userRoles, string(entity.Role_SUPPORT_AGENT)); !isSupportAgent {
+	if isSupportAgent := slices.Contains(userRoles, entity.Role_SUPPORT_AGENT); !isSupportAgent {
 		return nil, errs.NewConflictError("user is not a support agent")
 	}
 

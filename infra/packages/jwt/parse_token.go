@@ -5,13 +5,14 @@ import (
 	"log"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/rulyadhika/simple-gin-go-rest-api/model/entity"
 )
 
 type JWTPayload struct {
-	Id       uint32   `json:"id"`
-	Username string   `json:"username"`
-	Email    string   `json:"email"`
-	Roles    []string `json:"roles"`
+	Id       uint32            `json:"id"`
+	Username string            `json:"username"`
+	Email    string            `json:"email"`
+	Roles    []entity.UserType `json:"roles"`
 }
 
 func NewJWTTokenParser() *JWTPayload {
@@ -49,9 +50,9 @@ func (j *JWTPayload) bindTokenToStruct(token *jwt.Token) error {
 		return errors.New("invalid token")
 	}
 
-	roles := []string{}
+	roles := []entity.UserType{}
 	for _, data := range claims["roles"].([]any) {
-		roles = append(roles, data.(string))
+		roles = append(roles, entity.UserType(data.(string)))
 	}
 
 	j.Id = uint32(claims["id"].(float64))
