@@ -8,6 +8,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 	"github.com/rulyadhika/simple-gin-go-rest-api/infra/packages/errs"
+	"github.com/rulyadhika/simple-gin-go-rest-api/infra/packages/helper"
 	validationformatter "github.com/rulyadhika/simple-gin-go-rest-api/infra/packages/validation/validation_formatter"
 	"github.com/rulyadhika/simple-gin-go-rest-api/model/dto"
 	"github.com/rulyadhika/simple-gin-go-rest-api/model/entity"
@@ -87,28 +88,7 @@ func (t *ticketServiceImpl) FindAll(ctx *gin.Context, userId uint32, userRoles [
 	ticketsResponse := []dto.TicketResponse{}
 
 	for _, data := range *result {
-		ticketResponse := dto.TicketResponse{
-			Id:          data.Id,
-			TicketId:    data.TicketId,
-			Title:       data.Title,
-			Description: data.Description,
-			Priority:    data.Priority,
-			Status:      data.Status,
-			CreatedBy: dto.TicketResponseUserData{
-				Username: data.CreatedBy.Username.String,
-				Email:    data.CreatedBy.Email.String,
-			},
-			AssignTo: dto.TicketResponseUserData{
-				Username: data.AssignTo.Username.String,
-				Email:    data.AssignTo.Email.String,
-			},
-			AssignBy: dto.TicketResponseUserData{
-				Username: data.AssignBy.Username.String,
-				Email:    data.AssignBy.Email.String,
-			},
-			CreatedAt: data.CreatedAt,
-			UpdatedAt: data.UpdatedAt,
-		}
+		ticketResponse := *helper.ToDtoTicketResponse(&data)
 
 		ticketsResponse = append(ticketsResponse, ticketResponse)
 	}
@@ -123,30 +103,9 @@ func (t *ticketServiceImpl) FindOneByTicketId(ctx *gin.Context, ticketId string)
 		return nil, err
 	}
 
-	ticketResponse := dto.TicketResponse{
-		Id:          result.Id,
-		TicketId:    result.TicketId,
-		Title:       result.Title,
-		Description: result.Description,
-		Priority:    result.Priority,
-		Status:      result.Status,
-		CreatedBy: dto.TicketResponseUserData{
-			Username: result.CreatedBy.Username.String,
-			Email:    result.CreatedBy.Email.String,
-		},
-		AssignTo: dto.TicketResponseUserData{
-			Username: result.AssignTo.Username.String,
-			Email:    result.AssignTo.Email.String,
-		},
-		AssignBy: dto.TicketResponseUserData{
-			Username: result.AssignBy.Username.String,
-			Email:    result.AssignBy.Email.String,
-		},
-		CreatedAt: result.CreatedAt,
-		UpdatedAt: result.UpdatedAt,
-	}
+	ticketResponse := helper.ToDtoTicketResponse(result)
 
-	return &ticketResponse, nil
+	return ticketResponse, nil
 }
 
 func (t *ticketServiceImpl) AssignTicketToUser(ctx *gin.Context, ticketDto dto.AssignTicketToUserRequest) (*dto.TicketResponse, errs.Error) {
@@ -177,31 +136,9 @@ func (t *ticketServiceImpl) AssignTicketToUser(ctx *gin.Context, ticketDto dto.A
 		return nil, err
 	}
 
-	ticketResponse := dto.TicketResponse{
-		Id:          result.Id,
-		TicketId:    result.TicketId,
-		Title:       result.Title,
-		Description: result.Description,
-		Priority:    result.Priority,
-		Status:      result.Status,
-		CreatedBy: dto.TicketResponseUserData{
-			Username: result.CreatedBy.Username.String,
-			Email:    result.CreatedBy.Email.String,
-		},
-		AssignTo: dto.TicketResponseUserData{
-			Username: result.AssignTo.Username.String,
-			Email:    result.AssignTo.Email.String,
-		},
-		AssignBy: dto.TicketResponseUserData{
-			Username: result.AssignBy.Username.String,
-			Email:    result.AssignBy.Email.String,
-		},
-		CreatedAt: result.CreatedAt,
-		UpdatedAt: result.UpdatedAt,
-	}
+	ticketResponse := helper.ToDtoTicketResponse(result)
 
-	return &ticketResponse, nil
-
+	return ticketResponse, nil
 }
 
 func (t *ticketServiceImpl) UpdateTicketStatus(ctx *gin.Context, ticketDto dto.UpdateTicketStatusRequest, userRoles []entity.UserType) (*dto.TicketResponse, errs.Error) {
@@ -226,28 +163,7 @@ func (t *ticketServiceImpl) UpdateTicketStatus(ctx *gin.Context, ticketDto dto.U
 		return nil, err
 	}
 
-	ticketResponse := dto.TicketResponse{
-		Id:          result.Id,
-		TicketId:    result.TicketId,
-		Title:       result.Title,
-		Description: result.Description,
-		Priority:    result.Priority,
-		Status:      result.Status,
-		CreatedBy: dto.TicketResponseUserData{
-			Username: result.CreatedBy.Username.String,
-			Email:    result.CreatedBy.Email.String,
-		},
-		AssignTo: dto.TicketResponseUserData{
-			Username: result.AssignTo.Username.String,
-			Email:    result.AssignTo.Email.String,
-		},
-		AssignBy: dto.TicketResponseUserData{
-			Username: result.AssignBy.Username.String,
-			Email:    result.AssignBy.Email.String,
-		},
-		CreatedAt: result.CreatedAt,
-		UpdatedAt: result.UpdatedAt,
-	}
+	ticketResponse := helper.ToDtoTicketResponse(result)
 
-	return &ticketResponse, nil
+	return ticketResponse, nil
 }
