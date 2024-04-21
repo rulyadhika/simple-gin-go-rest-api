@@ -30,7 +30,7 @@ func main() {
 	authHandler := authhandler.NewAuthHandlerImpl(authService)
 
 	ticketRepository := ticketrepository.NewTicketRepositoryImpl()
-	ticketService := ticketservice.NewTicketServiceImpl(ticketRepository, db, validator)
+	ticketService := ticketservice.NewTicketServiceImpl(ticketRepository, userRepository, db, validator)
 	ticketHandler := tickethandler.NewTicketHandlerImpl(ticketService)
 
 	// middlewares

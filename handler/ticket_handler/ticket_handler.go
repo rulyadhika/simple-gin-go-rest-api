@@ -7,4 +7,5 @@ type TicketHandler interface {
 	FindAll(ctx *gin.Context)
 	FindOneByTicketId(ctx *gin.Context)
 	AssignTicketToUser(ctx *gin.Context)
+	UpdateTicketStatus(ctx *gin.Context)
 }

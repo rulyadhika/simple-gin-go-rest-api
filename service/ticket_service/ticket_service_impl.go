@@ -8,22 +8,26 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 	"github.com/rulyadhika/simple-gin-go-rest-api/infra/packages/errs"
+	"github.com/rulyadhika/simple-gin-go-rest-api/infra/packages/helper"
 	validationformatter "github.com/rulyadhika/simple-gin-go-rest-api/infra/packages/validation/validation_formatter"
 	"github.com/rulyadhika/simple-gin-go-rest-api/model/dto"
 	"github.com/rulyadhika/simple-gin-go-rest-api/model/entity"
 	ticketrepository "github.com/rulyadhika/simple-gin-go-rest-api/repository/ticket_repository"
+	userrepository "github.com/rulyadhika/simple-gin-go-rest-api/repository/user_repository"
 )
 
 type ticketServiceImpl struct {
 	db        *sql.DB
 	tr        ticketrepository.TicketRepository
+	ur        userrepository.UserRepository
 	validator *validator.Validate
 }
 
-func NewTicketServiceImpl(tr ticketrepository.TicketRepository, db *sql.DB, validator *validator.Validate) TicketService {
+func NewTicketServiceImpl(tr ticketrepository.TicketRepository, ur userrepository.UserRepository, db *sql.DB, validator *validator.Validate) TicketService {
 	return &ticketServiceImpl{
 		db,
 		tr,
+		ur,
 		validator,
 	}
 }
@@ -64,7 +68,7 @@ func (t *ticketServiceImpl) Create(ctx *gin.Context, ticketDto dto.NewTicketRequ
 	}, nil
 }
 
-func (t *ticketServiceImpl) FindAll(ctx *gin.Context, userId uint32, userRoles []string) (*[]dto.TicketResponse, errs.Error) {
+func (t *ticketServiceImpl) FindAll(ctx *gin.Context, userId uint32, userRoles []entity.UserType) (*[]dto.TicketResponse, errs.Error) {
 	var result *[]ticketrepository.TicketUser
 	var err errs.Error
 
@@ -84,28 +88,7 @@ func (t *ticketServiceImpl) FindAll(ctx *gin.Context, userId uint32, userRoles [
 	ticketsResponse := []dto.TicketResponse{}
 
 	for _, data := range *result {
-		ticketResponse := dto.TicketResponse{
-			Id:          data.Id,
-			TicketId:    data.TicketId,
-			Title:       data.Title,
-			Description: data.Description,
-			Priority:    data.Priority,
-			Status:      data.Status,
-			CreatedBy: dto.TicketResponseUserData{
-				Username: data.CreatedBy.Username.String,
-				Email:    data.CreatedBy.Email.String,
-			},
-			AssignTo: dto.TicketResponseUserData{
-				Username: data.AssignTo.Username.String,
-				Email:    data.AssignTo.Email.String,
-			},
-			AssignBy: dto.TicketResponseUserData{
-				Username: data.AssignBy.Username.String,
-				Email:    data.AssignBy.Email.String,
-			},
-			CreatedAt: data.CreatedAt,
-			UpdatedAt: data.UpdatedAt,
-		}
+		ticketResponse := *helper.ToDtoTicketResponse(&data)
 
 		ticketsResponse = append(ticketsResponse, ticketResponse)
 	}
@@ -120,28 +103,67 @@ func (t *ticketServiceImpl) FindOneByTicketId(ctx *gin.Context, ticketId string)
 		return nil, err
 	}
 
-	ticketResponse := dto.TicketResponse{
-		Id:          result.Id,
-		TicketId:    result.TicketId,
-		Title:       result.Title,
-		Description: result.Description,
-		Priority:    result.Priority,
-		Status:      result.Status,
-		CreatedBy: dto.TicketResponseUserData{
-			Username: result.CreatedBy.Username.String,
-			Email:    result.CreatedBy.Email.String,
-		},
-		AssignTo: dto.TicketResponseUserData{
-			Username: result.AssignTo.Username.String,
-			Email:    result.AssignTo.Email.String,
-		},
-		AssignBy: dto.TicketResponseUserData{
-			Username: result.AssignBy.Username.String,
-			Email:    result.AssignBy.Email.String,
-		},
-		CreatedAt: result.CreatedAt,
-		UpdatedAt: result.UpdatedAt,
+	ticketResponse := helper.ToDtoTicketResponse(result)
+
+	return ticketResponse, nil
+}
+
+func (t *ticketServiceImpl) AssignTicketToUser(ctx *gin.Context, ticketDto dto.AssignTicketToUserRequest) (*dto.TicketResponse, errs.Error) {
+	ticket := entity.Ticket{
+		TicketId: ticketDto.TicketId,
+		AssignTo: ticketDto.AssignToId,
+		AssignBy: ticketDto.AssignById,
+		Status:   entity.TicketStatus_IN_PROGRESS,
 	}
 
-	return &ticketResponse, nil
+	user, err := t.ur.FindById(ctx, t.db, ticket.AssignTo)
+	if err != nil {
+		return nil, err
+	}
+
+	userRoles := []entity.UserType{}
+	for _, role := range user.Roles {
+		userRoles = append(userRoles, role.RoleName)
+	}
+
+	if isSupportAgent := slices.Contains(userRoles, entity.Role_SUPPORT_AGENT); !isSupportAgent {
+		return nil, errs.NewConflictError("user is not a support agent")
+	}
+
+	result, err := t.tr.AssignTicketToUser(ctx, t.db, ticket)
+
+	if err != nil {
+		return nil, err
+	}
+
+	ticketResponse := helper.ToDtoTicketResponse(result)
+
+	return ticketResponse, nil
+}
+
+func (t *ticketServiceImpl) UpdateTicketStatus(ctx *gin.Context, ticketDto dto.UpdateTicketStatusRequest, userRoles []entity.UserType) (*dto.TicketResponse, errs.Error) {
+	if validationErr := t.validator.Struct(ticketDto); validationErr != nil {
+		return nil, errs.NewBadRequestError(validationformatter.FormatValidationError(validationErr))
+	}
+
+	ticket := entity.Ticket{
+		TicketId: ticketDto.TicketId,
+		Status:   ticketDto.Status,
+	}
+
+	// check whether the user is eligible to update ticket status based on their roles and what ticket status choosen
+	// entity.Role_SUPPORT_SUPERVISOR is only allowed to change ticket status to entity.TicketStatus_CLOSED
+	// entity.Role_CLIENT is only allowed to change ticket status to entity.TicketStatus_RESOLVED
+	if eligible := slices.Contains(userRoles, entity.Role_SUPPORT_SUPERVISOR) && ticket.Status == entity.TicketStatus_CLOSED || slices.Contains(userRoles, entity.Role_CLIENT) && ticket.Status == entity.TicketStatus_RESOLVED; !eligible {
+		return nil, errs.NewForbiddenError("you're not allowed to change this support ticket status to: " + string(ticket.Status))
+	}
+
+	result, err := t.tr.UpdateTicketStatus(ctx, t.db, ticket)
+	if err != nil {
+		return nil, err
+	}
+
+	ticketResponse := helper.ToDtoTicketResponse(result)
+
+	return ticketResponse, nil
 }

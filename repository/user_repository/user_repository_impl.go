@@ -16,7 +16,7 @@ func NewUserRepositoryImpl() UserRepository {
 }
 
 func (u *UserRepositoryImpl) Create(ctx *gin.Context, tx *sql.Tx, user entity.User) (*entity.User, errs.Error) {
-	sqlQuery := `INSERT INTO users(username, email, password) VALUES($1,$2,$3) RETURNING id`
+	sqlQuery := createNewUserQuery
 
 	err := tx.QueryRowContext(ctx, sqlQuery, user.Username, user.Email, user.Password).Scan(&user.Id)
 
@@ -29,9 +29,7 @@ func (u *UserRepositoryImpl) Create(ctx *gin.Context, tx *sql.Tx, user entity.Us
 }
 
 func (u *UserRepositoryImpl) FindByEmail(ctx *gin.Context, db *sql.DB, email string) (*UserRoles, errs.Error) {
-	sqlQuery := `SELECT users.id, username, email, password, users.created_at, users.updated_at, roles.id, roles.role_name
-	FROM users JOIN users_roles ON users.id=users_roles.user_id
-	JOIN roles on users_roles.role_id=roles.id WHERE email=$1`
+	sqlQuery := findOneUserByEmailQuery
 
 	rows, err := db.QueryContext(ctx, sqlQuery, email)
 
@@ -68,9 +66,7 @@ func (u *UserRepositoryImpl) FindByEmail(ctx *gin.Context, db *sql.DB, email str
 }
 
 func (u *UserRepositoryImpl) FindByUsername(ctx *gin.Context, db *sql.DB, username string) (*UserRoles, errs.Error) {
-	sqlQuery := `SELECT users.id, username, email, password, users.created_at, users.updated_at, roles.id, roles.role_name
-	FROM users JOIN users_roles ON users.id=users_roles.user_id
-	JOIN roles on users_roles.role_id=roles.id WHERE username=$1`
+	sqlQuery := findOneUserByUsernameQuery
 
 	rows, err := db.QueryContext(ctx, sqlQuery, username)
 
@@ -107,9 +103,7 @@ func (u *UserRepositoryImpl) FindByUsername(ctx *gin.Context, db *sql.DB, userna
 }
 
 func (u *UserRepositoryImpl) FindById(ctx *gin.Context, db *sql.DB, id uint32) (*UserRoles, errs.Error) {
-	sqlQuery := `SELECT users.id, username, email, password, users.created_at, users.updated_at, roles.id, roles.role_name
-	FROM users JOIN users_roles ON users.id=users_roles.user_id
-	JOIN roles on users_roles.role_id=roles.id WHERE users.id=$1`
+	sqlQuery := findOneUserByIdQuery
 
 	rows, err := db.QueryContext(ctx, sqlQuery, id)
 

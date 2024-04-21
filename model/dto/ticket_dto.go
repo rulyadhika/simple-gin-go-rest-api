@@ -45,7 +45,12 @@ type TicketResponseUserData struct {
 }
 
 type AssignTicketToUserRequest struct {
-	TicketId   uint32
+	TicketId   string
 	AssignToId uint32
 	AssignById uint32
+}
+
+type UpdateTicketStatusRequest struct {
+	TicketId string
+	Status   entity.TicketStatus `json:"status" validate:"required,ticket_status_custom_validation"`
 }
