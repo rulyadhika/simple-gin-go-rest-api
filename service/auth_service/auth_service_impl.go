@@ -42,23 +42,18 @@ func (a *AuthServiceImpl) Register(ctx *gin.Context, userDto *dto.RegisterUserRe
 		return nil, errs.NewBadRequestError(validationformatter.FormatValidationError(errValidate))
 	}
 
-	tx, txErr := a.DB.Begin()
-
-	if txErr != nil {
-		log.Printf("[Register - Service] err: %v", txErr.Error())
-
-		if errRollback := tx.Rollback(); errRollback != nil {
-			log.Printf("[Register - Service] err: %v", errRollback.Error())
-		}
-		return nil, errs.NewInternalServerError("something went wrong")
-	}
-
 	user := entity.User{
 		Username: userDto.Username,
 		Email:    userDto.Email,
 		Password: userDto.Password,
 	}
 
+	if err := user.HashPassword(); err != nil {
+		log.Printf("[Register - Service] err: %v", err.Error())
+		return nil, errs.NewInternalServerError("something went wrong")
+	}
+
+	// check if user already exists
 	if findByEmail, err := a.UserRepository.FindByEmail(ctx, a.DB, user.Email); err != nil {
 		if err.Status() == http.StatusText(http.StatusInternalServerError) {
 			return nil, err
@@ -74,31 +69,38 @@ func (a *AuthServiceImpl) Register(ctx *gin.Context, userDto *dto.RegisterUserRe
 	} else if findByUsername != nil {
 		return nil, errs.NewConflictError("username has already been taken")
 	}
+	// end of check if user already exists
 
-	if err := user.HashPassword(); err != nil {
-		log.Printf("[Register - Service] err: %v", err.Error())
-		return nil, errs.NewInternalServerError("something went wrong")
-	}
-
-	result, err := a.UserRepository.Create(ctx, tx, user)
+	// fetch roles data
+	roles, err := a.RoleRepository.FindRolesByName(ctx, a.DB, []entity.UserType{entity.Role_CLIENT})
 	if err != nil {
 		return nil, err
 	}
+	// end of fetch roles data
 
 	// create new user with client roles
-	roles, err := a.RoleRepository.FindRolesByName(ctx, a.DB, []string{"client"})
+	tx, txErr := a.DB.Begin()
+	if txErr != nil {
+		log.Printf("[Register - Service] err: %v", txErr.Error())
+		tx.Rollback()
+		return nil, errs.NewInternalServerError("something went wrong")
+	}
+
+	// create user
+	result, err := a.UserRepository.Create(ctx, tx, user)
 	if err != nil {
+		tx.Rollback()
 		return nil, err
 	}
 
 	userRoles := []entity.UserRole{}
-
 	for _, role := range *roles {
 		userRoles = append(userRoles, entity.UserRole{UserId: result.Id, RoleId: role.Id})
 	}
 
 	err = a.UserRoleRepository.AssignRolesToUser(ctx, tx, userRoles)
 	if err != nil {
+		tx.Rollback()
 		return nil, err
 	}
 
@@ -106,6 +108,7 @@ func (a *AuthServiceImpl) Register(ctx *gin.Context, userDto *dto.RegisterUserRe
 		log.Printf("[Register - Service] err: %v", commitErr.Error())
 		return nil, errs.NewInternalServerError("something went wrong")
 	}
+	// end of create user
 
 	return &dto.RegisterUserResponse{Username: result.Username, Email: result.Email}, nil
 }

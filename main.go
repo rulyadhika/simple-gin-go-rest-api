@@ -32,7 +32,7 @@ func main() {
 
 	authService := authservice.NewAuthServiceImpl(userRepository, userRoleRepository, roleRepository, db, validator)
 	ticketService := ticketservice.NewTicketServiceImpl(ticketRepository, userRepository, db, validator)
-	userService := userservice.NewUserServiceImpl(userRepository, db, validator)
+	userService := userservice.NewUserServiceImpl(userRepository, roleRepository, userRoleRepository, db, validator)
 
 	authHandler := authhandler.NewAuthHandlerImpl(authService)
 	ticketHandler := tickethandler.NewTicketHandlerImpl(ticketService)

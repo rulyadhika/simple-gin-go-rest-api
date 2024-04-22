@@ -18,7 +18,7 @@ func NewUserRepositoryImpl() UserRepository {
 func (u *UserRepositoryImpl) Create(ctx *gin.Context, tx *sql.Tx, user entity.User) (*entity.User, errs.Error) {
 	sqlQuery := createNewUserQuery
 
-	err := tx.QueryRowContext(ctx, sqlQuery, user.Username, user.Email, user.Password).Scan(&user.Id)
+	err := tx.QueryRowContext(ctx, sqlQuery, user.Username, user.Email, user.Password).Scan(&user.Id, &user.CreatedAt, &user.UpdatedAt)
 
 	if err != nil {
 		log.Printf("[CreateUser - Repo] err: %s", err.Error())

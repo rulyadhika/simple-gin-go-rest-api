@@ -1,6 +1,7 @@
 package userhandler
 
 import (
+	"log"
 	"net/http"
 	"strings"
 
@@ -62,4 +63,31 @@ func (u *UserHandlerImpl) FindOneByUsername(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, response)
+}
+
+func (u *UserHandlerImpl) Create(ctx *gin.Context) {
+	userDto := &dto.CreateNewUserRequest{}
+
+	if err := ctx.ShouldBindJSON(userDto); err != nil {
+		log.Printf("[CreateNewUser - Handler], err: %s\n", err.Error())
+		unprocessableEntityError := errs.NewUnprocessableEntityError("invalid json request body")
+		ctx.AbortWithStatusJSON(unprocessableEntityError.StatusCode(), unprocessableEntityError)
+		return
+	}
+
+	result, err := u.us.Create(ctx, userDto)
+
+	if err != nil {
+		ctx.AbortWithStatusJSON(err.StatusCode(), err)
+		return
+	}
+
+	response := dto.ApiResponse{
+		StatusCode: http.StatusCreated,
+		Status:     http.StatusText(http.StatusCreated),
+		Message:    "successfully created a new user",
+		Data:       result,
+	}
+
+	ctx.JSON(http.StatusCreated, response)
 }
