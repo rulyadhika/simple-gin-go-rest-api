@@ -28,6 +28,42 @@ func (u *UserRepositoryImpl) Create(ctx *gin.Context, tx *sql.Tx, user entity.Us
 	return &user, nil
 }
 
+func (u *UserRepositoryImpl) FindAll(ctx *gin.Context, db *sql.DB) (*[]UserRoles, errs.Error) {
+	sqlQuery := findAllUserQuery
+
+	rows, err := db.QueryContext(ctx, sqlQuery)
+
+	if err != nil {
+		log.Printf("[FindAll - Repo] err: %s", err.Error())
+		return nil, errs.NewInternalServerError("something went wrong")
+	}
+
+	defer rows.Close()
+
+	usersRoles := []UserRole{}
+
+	for rows.Next() {
+		userRole := UserRole{}
+		err := rows.Scan(&userRole.User.Id, &userRole.Username, &userRole.Email, &userRole.Password, &userRole.CreatedAt, &userRole.UpdatedAt, &userRole.Role.Id, &userRole.RoleName)
+
+		if err != nil {
+			log.Printf("[FindAll - Repo] err: %s", err.Error())
+			return nil, errs.NewInternalServerError("something went wrong")
+		}
+
+		usersRoles = append(usersRoles, userRole)
+	}
+
+	// if the result is empty
+	if len(usersRoles) == 0 {
+		return nil, errs.NewNotFoundError("no user data found")
+	}
+
+	allUsers := UserRoles{}
+
+	return allUsers.HandleMappingUsersRoles(usersRoles), nil
+}
+
 func (u *UserRepositoryImpl) FindByEmail(ctx *gin.Context, db *sql.DB, email string) (*UserRoles, errs.Error) {
 	sqlQuery := findOneUserByEmailQuery
 
