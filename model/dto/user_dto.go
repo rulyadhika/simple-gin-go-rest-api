@@ -27,3 +27,8 @@ type CreateNewUserRequest struct {
 	PasswordConfirmation string            `json:"password_confirmation" validate:"required,eqfield=Password"`
 	Roles                []entity.UserType `json:"roles" validate:"required,dive,user_roles_custom_validation"`
 }
+
+type AssignRoleToUserRequest struct {
+	UserId uint32          `json:"user_id" validate:"required"`
+	Role   entity.UserType `json:"role" validate:"required,user_roles_custom_validation"`
+}

@@ -68,7 +68,7 @@ func (u *UserServiceImpl) Create(ctx *gin.Context, userDto *dto.CreateNewUserReq
 	}
 
 	if err := user.HashPassword(); err != nil {
-		log.Printf("[CreateNewUser - Repo] err: %v", err.Error())
+		log.Printf("[CreateNewUser - Service] err: %v", err.Error())
 		return nil, errs.NewInternalServerError("something went wrong")
 	}
 
@@ -100,7 +100,7 @@ func (u *UserServiceImpl) Create(ctx *gin.Context, userDto *dto.CreateNewUserReq
 	// create user
 	tx, errTx := u.db.Begin()
 	if errTx != nil {
-		log.Printf("[CreateNewUser - Repo], err: %s\n", errTx.Error())
+		log.Printf("[CreateNewUser - Service], err: %s\n", errTx.Error())
 		tx.Rollback()
 		return nil, errs.NewInternalServerError("something went wrong")
 	}
@@ -122,7 +122,7 @@ func (u *UserServiceImpl) Create(ctx *gin.Context, userDto *dto.CreateNewUserReq
 	}
 
 	if commitErr := tx.Commit(); commitErr != nil {
-		log.Printf("[CreateNewUser - Repo] err: %v", commitErr.Error())
+		log.Printf("[CreateNewUser - Service] err: %v", commitErr.Error())
 		return nil, errs.NewInternalServerError("something went wrong")
 	}
 	// end of create user
@@ -133,4 +133,56 @@ func (u *UserServiceImpl) Create(ctx *gin.Context, userDto *dto.CreateNewUserReq
 	}
 
 	return helper.ToDtoUserResponse(&newUser), nil
+}
+
+func (u *UserServiceImpl) AssignReassignRoleToUser(ctx *gin.Context, userDto *dto.AssignRoleToUserRequest) (*dto.UserResponse, errs.Error) {
+	if errValidation := u.validate.Struct(userDto); errValidation != nil {
+		return nil, errs.NewBadRequestError(validationformatter.FormatValidationError(errValidation))
+	}
+
+	// fetch roles data
+	rolesResult, err := u.rr.FindRolesByName(ctx, u.db, []entity.UserType{userDto.Role})
+	if err != nil {
+		return nil, err
+	}
+	// end of fetch roles data
+
+	roles := *rolesResult
+
+	userRole := entity.UserRole{
+		UserId: userDto.UserId,
+		RoleId: roles[0].Id,
+	}
+
+	tx, errTx := u.db.Begin()
+	if errTx != nil {
+		log.Printf("[AssignReassignRoleToUser - Service], err: %s\n", errTx.Error())
+		tx.Rollback()
+		return nil, errs.NewInternalServerError("something went wrong")
+	}
+
+	if err := u.urr.RevokeRoleFromUser(ctx, tx, userRole); err != nil {
+		// if when revoking role from user return not found then assign role to user
+		if err.Status() == http.StatusText(http.StatusNotFound) {
+			if err := u.urr.AssignRolesToUser(ctx, tx, []entity.UserRole{userRole}); err != nil {
+				tx.Rollback()
+				return nil, err
+			}
+		} else {
+			tx.Rollback()
+			return nil, err
+		}
+	}
+
+	if commitErr := tx.Commit(); commitErr != nil {
+		log.Printf("[AssignReassignRoleToUser - Service] err: %v", commitErr.Error())
+		return nil, errs.NewInternalServerError("something went wrong")
+	}
+
+	user, err := u.ur.FindById(ctx, u.db, userDto.UserId)
+	if err != nil {
+		return nil, err
+	}
+
+	return helper.ToDtoUserResponse(user), nil
 }
