@@ -25,7 +25,6 @@ var (
 
 type Ticket struct {
 	Id          uuid.UUID
-	TicketId    string
 	Title       string
 	Description string
 	Priority    TicketPriority

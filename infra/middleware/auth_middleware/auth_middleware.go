@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/rulyadhika/simple-gin-go-rest-api/infra/config"
 	"github.com/rulyadhika/simple-gin-go-rest-api/infra/packages/errs"
 	"github.com/rulyadhika/simple-gin-go-rest-api/infra/packages/jwt"
@@ -72,7 +73,13 @@ func (a *AuthMiddlewareImpl) AuthorizationTicket() gin.HandlerFunc {
 			return
 		}
 
-		ticketId := ctx.Param("ticketId")
+		ticketId, errParseUUID := uuid.Parse(ctx.Param("ticketId"))
+		if errParseUUID != nil {
+			log.Printf("[AuthorizationTicket - middleware], err: %s\n", errParseUUID.Error())
+			unprocessableEntityError := errs.NewUnprocessableEntityError("param ticketId must be a valid id")
+			ctx.AbortWithStatusJSON(unprocessableEntityError.StatusCode(), unprocessableEntityError)
+			return
+		}
 
 		result, err := a.tr.FindOneByTicketId(ctx, a.db, ticketId)
 
