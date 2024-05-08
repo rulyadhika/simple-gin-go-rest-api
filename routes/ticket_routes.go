@@ -15,7 +15,7 @@ func NewTicketRoutes(r *gin.Engine, handler tickethandler.TicketHandler, authMid
 		ticketGroup.GET("/", handler.FindAll)
 
 		ticketGroup.GET("/:ticketId", authMiddleware.AuthorizationTicket(), handler.FindOneByTicketId)
-		ticketGroup.PATCH("/:ticketId/assignments/:userId", authMiddleware.RoleAuthorization(entity.Role_SUPPORT_SUPERVISOR), handler.AssignTicketToUser)
-		ticketGroup.PATCH("/:ticketId/status/", authMiddleware.RoleAuthorization(entity.Role_SUPPORT_SUPERVISOR, entity.Role_CLIENT), handler.UpdateTicketStatus)
+		ticketGroup.PUT("/:ticketId/assignments/:userId", authMiddleware.RoleAuthorization(entity.Role_SUPPORT_SUPERVISOR), handler.AssignTicketToUser)
+		ticketGroup.PUT("/:ticketId/status/", authMiddleware.RoleAuthorization(entity.Role_SUPPORT_SUPERVISOR, entity.Role_CLIENT), handler.UpdateTicketStatus)
 	}
 }
