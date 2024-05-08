@@ -46,5 +46,17 @@ func NewValidator() *validator.Validate {
 		return nil
 	}
 
+	err = validation.RegisterValidation("user_roles_custom_validation", func(fl validator.FieldLevel) bool {
+		terms := []entity.UserType{entity.Role_CLIENT, entity.Role_SUPPORT_AGENT, entity.Role_SUPPORT_SUPERVISOR, entity.Role_ADMINISTRATOR}
+		value := fl.Field().Interface().(entity.UserType)
+
+		return slices.Contains(terms, value)
+	})
+
+	if err != nil {
+		log.Println(err)
+		return nil
+	}
+
 	return validation
 }

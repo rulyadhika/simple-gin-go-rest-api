@@ -16,7 +16,7 @@ func NewRoleRepositoryImpl() RoleRepository {
 	return &RoleRepositoryImpl{}
 }
 
-func (r *RoleRepositoryImpl) FindRolesByName(ctx *gin.Context, db *sql.DB, rolesList []string) (*[]entity.Role, errs.Error) {
+func (r *RoleRepositoryImpl) FindRolesByName(ctx *gin.Context, db *sql.DB, rolesList []entity.UserType) (*[]entity.Role, errs.Error) {
 	sqlQuery := "SELECT id, role_name FROM roles WHERE role_name = ANY($1)"
 
 	rows, err := db.QueryContext(ctx, sqlQuery, pq.Array(rolesList))

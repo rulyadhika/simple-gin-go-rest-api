@@ -9,5 +9,5 @@ import (
 )
 
 type RoleRepository interface {
-	FindRolesByName(ctx *gin.Context, db *sql.DB, rolesList []string) (*[]entity.Role, errs.Error)
+	FindRolesByName(ctx *gin.Context, db *sql.DB, rolesList []entity.UserType) (*[]entity.Role, errs.Error)
 }

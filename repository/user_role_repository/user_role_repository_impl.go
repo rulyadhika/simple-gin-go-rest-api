@@ -2,6 +2,7 @@ package userrolerepository
 
 import (
 	"database/sql"
+	"errors"
 	"log"
 
 	"github.com/gin-gonic/gin"
@@ -33,6 +34,21 @@ func (u *UserRoleRepositoryImpl) AssignRolesToUser(ctx *gin.Context, tx *sql.Tx,
 			log.Printf("[AssignRolesToUser - Repo] err: %s", err.Error())
 			return errs.NewInternalServerError("something went wrong")
 		}
+	}
+
+	return nil
+}
+
+func (u *UserRoleRepositoryImpl) RevokeRoleFromUser(ctx *gin.Context, tx *sql.Tx, userRole entity.UserRole) errs.Error {
+	sqlQuery := `DELETE FROM users_roles WHERE user_id=$1 AND role_id=$2 RETURNING id`
+
+	if err := tx.QueryRowContext(ctx, sqlQuery, userRole.UserId, userRole.RoleId).Scan(&userRole.Id); err != nil {
+		log.Printf("[RevokeRoleFromUser - Repo], err: %s\n", err.Error())
+		if errors.Is(err, sql.ErrNoRows) {
+			return errs.NewNotFoundError("no user role found")
+		}
+
+		return errs.NewInternalServerError("something went wrong")
 	}
 
 	return nil

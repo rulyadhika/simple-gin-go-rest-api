@@ -1,6 +1,8 @@
 package userrepository
 
 import (
+	"slices"
+
 	"github.com/rulyadhika/simple-gin-go-rest-api/model/entity"
 )
 
@@ -34,4 +36,35 @@ func (u *UserRoles) HandleMappingUserRoles(userRole []UserRole) {
 	}
 
 	u.Roles = roles
+}
+
+func (u *UserRoles) HandleMappingUsersRoles(userRoles []UserRole) *[]UserRoles {
+	allUsers := []UserRoles{}
+
+	for _, user := range userRoles {
+		index := slices.IndexFunc(allUsers, func(ur UserRoles) bool {
+			return ur.Id == user.User.Id
+		})
+
+		if index == -1 {
+			user := UserRoles{
+				User: entity.User{
+					Id:        user.User.Id,
+					Username:  user.Username,
+					Email:     user.Email,
+					Password:  user.Password,
+					CreatedAt: user.CreatedAt,
+					UpdatedAt: user.UpdatedAt,
+				}, Roles: []entity.Role{{
+					Id:       uint32(user.Role.Id),
+					RoleName: user.Role.RoleName,
+				}},
+			}
+			allUsers = append(allUsers, user)
+		} else {
+			allUsers[index].Roles = append(allUsers[index].Roles, user.Role)
+		}
+	}
+
+	return &allUsers
 }
