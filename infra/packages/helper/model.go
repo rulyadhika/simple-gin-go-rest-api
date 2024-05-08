@@ -9,7 +9,6 @@ import (
 func ToDtoTicketResponse(data *ticketrepository.TicketUser) *dto.TicketResponse {
 	ticketResponse := dto.TicketResponse{
 		Id:          data.Id,
-		TicketId:    data.TicketId,
 		Title:       data.Title,
 		Description: data.Description,
 		Priority:    data.Priority,

@@ -3,7 +3,6 @@ CREATE TYPE TicketStatus AS ENUM('open','in progress','resolved','closed');
 
 CREATE TABLE IF NOT EXISTS tickets(
     id UUID PRIMARY KEY DEFAULT gen_random_uuid (),
-    ticket_id VARCHAR (255) NOT NULL UNIQUE,
     title VARCHAR (255) NOT NULL,
     description TEXT NOT NULL,
     priority TicketPriority NOT NULL,

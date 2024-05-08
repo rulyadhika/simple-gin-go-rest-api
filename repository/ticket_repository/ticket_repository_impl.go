@@ -21,7 +21,7 @@ func NewTicketRepositoryImpl() TicketRepository {
 func (t *ticketRepositoryImpl) Create(ctx *gin.Context, db *sql.DB, ticket entity.Ticket) (*entity.Ticket, errs.Error) {
 	sqlQuery := createNewTicketQuery
 
-	err := db.QueryRowContext(ctx, sqlQuery, ticket.TicketId, ticket.Title, ticket.Description, ticket.Priority, ticket.Status, ticket.CreatedBy).Scan(&ticket.Id, &ticket.CreatedAt, &ticket.UpdatedAt)
+	err := db.QueryRowContext(ctx, sqlQuery, ticket.Title, ticket.Description, ticket.Priority, ticket.Status, ticket.CreatedBy).Scan(&ticket.Id, &ticket.CreatedAt, &ticket.UpdatedAt)
 
 	if err != nil {
 		log.Printf("[CreateTicket - Repo] err: %s\n", err.Error())
@@ -48,7 +48,7 @@ func (t *ticketRepositoryImpl) FindAll(ctx *gin.Context, db *sql.DB) (*[]TicketU
 	for rows.Next() {
 		ticketUser := TicketUser{}
 
-		err := rows.Scan(&ticketUser.Id, &ticketUser.TicketId, &ticketUser.Title, &ticketUser.Description, &ticketUser.Priority, &ticketUser.Status,
+		err := rows.Scan(&ticketUser.Id, &ticketUser.Title, &ticketUser.Description, &ticketUser.Priority, &ticketUser.Status,
 			&ticketUser.CreatedAt, &ticketUser.UpdatedAt, &ticketUser.CreatedBy.Username, &ticketUser.CreatedBy.Email,
 			&ticketUser.AssignTo.Username, &ticketUser.AssignTo.Email, &ticketUser.AssignBy.Username, &ticketUser.AssignBy.Email)
 
@@ -85,7 +85,7 @@ func (t *ticketRepositoryImpl) FindAllByUserId(ctx *gin.Context, db *sql.DB, use
 	for rows.Next() {
 		ticketUser := TicketUser{}
 
-		err := rows.Scan(&ticketUser.Id, &ticketUser.TicketId, &ticketUser.Title, &ticketUser.Description, &ticketUser.Priority, &ticketUser.Status,
+		err := rows.Scan(&ticketUser.Id, &ticketUser.Title, &ticketUser.Description, &ticketUser.Priority, &ticketUser.Status,
 			&ticketUser.CreatedAt, &ticketUser.UpdatedAt, &ticketUser.CreatedBy.Username, &ticketUser.CreatedBy.Email,
 			&ticketUser.AssignTo.Username, &ticketUser.AssignTo.Email, &ticketUser.AssignBy.Username, &ticketUser.AssignBy.Email)
 
@@ -105,12 +105,12 @@ func (t *ticketRepositoryImpl) FindAllByUserId(ctx *gin.Context, db *sql.DB, use
 	return &ticketsUser, nil
 }
 
-func (t *ticketRepositoryImpl) FindOneByTicketId(ctx *gin.Context, db *sql.DB, ticketId string) (*TicketUser, errs.Error) {
+func (t *ticketRepositoryImpl) FindOneByTicketId(ctx *gin.Context, db *sql.DB, ticketId uuid.UUID) (*TicketUser, errs.Error) {
 	sqlQuery := findOneTicketByTicketIdQuery
 
 	ticketUser := TicketUser{}
 
-	err := db.QueryRowContext(ctx, sqlQuery, ticketId).Scan(&ticketUser.Id, &ticketUser.TicketId, &ticketUser.Title, &ticketUser.Description, &ticketUser.Priority, &ticketUser.Status,
+	err := db.QueryRowContext(ctx, sqlQuery, ticketId).Scan(&ticketUser.Id, &ticketUser.Title, &ticketUser.Description, &ticketUser.Priority, &ticketUser.Status,
 		&ticketUser.CreatedAt, &ticketUser.UpdatedAt, &ticketUser.CreatedBy.Username, &ticketUser.CreatedBy.Email,
 		&ticketUser.AssignTo.Username, &ticketUser.AssignTo.Email, &ticketUser.AssignBy.Username, &ticketUser.AssignBy.Email)
 
@@ -129,7 +129,7 @@ func (t *ticketRepositoryImpl) FindOneByTicketId(ctx *gin.Context, db *sql.DB, t
 func (t *ticketRepositoryImpl) AssignTicketToUser(ctx *gin.Context, db *sql.DB, ticket entity.Ticket) (*TicketUser, errs.Error) {
 	sqlQuery := assignTicketToUserQuery
 
-	if err := db.QueryRowContext(ctx, sqlQuery, ticket.AssignTo, ticket.AssignBy, ticket.Status, time.Now(), ticket.TicketId).Scan(&ticket.Id); err != nil {
+	if err := db.QueryRowContext(ctx, sqlQuery, ticket.AssignTo, ticket.AssignBy, ticket.Status, time.Now(), ticket.Id).Scan(&ticket.Id); err != nil {
 		log.Printf("[AssignTicketToUser - Repo], err: %s\n", err.Error())
 
 		if errors.Is(err, sql.ErrNoRows) {
@@ -143,7 +143,7 @@ func (t *ticketRepositoryImpl) AssignTicketToUser(ctx *gin.Context, db *sql.DB, 
 
 	ticketUser := TicketUser{}
 
-	err := db.QueryRowContext(ctx, queryGetData, ticket.TicketId).Scan(&ticketUser.Id, &ticketUser.TicketId, &ticketUser.Title, &ticketUser.Description, &ticketUser.Priority, &ticketUser.Status,
+	err := db.QueryRowContext(ctx, queryGetData, ticket.Id).Scan(&ticketUser.Id, &ticketUser.Title, &ticketUser.Description, &ticketUser.Priority, &ticketUser.Status,
 		&ticketUser.CreatedAt, &ticketUser.UpdatedAt, &ticketUser.CreatedBy.Username, &ticketUser.CreatedBy.Email,
 		&ticketUser.AssignTo.Username, &ticketUser.AssignTo.Email, &ticketUser.AssignBy.Username, &ticketUser.AssignBy.Email)
 
@@ -158,7 +158,7 @@ func (t *ticketRepositoryImpl) AssignTicketToUser(ctx *gin.Context, db *sql.DB, 
 func (t *ticketRepositoryImpl) UpdateTicketStatus(ctx *gin.Context, db *sql.DB, ticket entity.Ticket) (*TicketUser, errs.Error) {
 	sqlQuery := updateTicketStatusQuery
 
-	if err := db.QueryRowContext(ctx, sqlQuery, ticket.Status, time.Now(), ticket.TicketId).Scan(&ticket.Id); err != nil {
+	if err := db.QueryRowContext(ctx, sqlQuery, ticket.Status, time.Now(), ticket.Id).Scan(&ticket.Id); err != nil {
 		log.Printf("[UpdateTicketStatus - Repo], err: %s\n", err.Error())
 
 		if errors.Is(err, sql.ErrNoRows) {
@@ -172,7 +172,7 @@ func (t *ticketRepositoryImpl) UpdateTicketStatus(ctx *gin.Context, db *sql.DB, 
 
 	ticketUser := TicketUser{}
 
-	err := db.QueryRowContext(ctx, queryGetData, ticket.TicketId).Scan(&ticketUser.Id, &ticketUser.TicketId, &ticketUser.Title, &ticketUser.Description, &ticketUser.Priority, &ticketUser.Status,
+	err := db.QueryRowContext(ctx, queryGetData, ticket.Id).Scan(&ticketUser.Id, &ticketUser.Title, &ticketUser.Description, &ticketUser.Priority, &ticketUser.Status,
 		&ticketUser.CreatedAt, &ticketUser.UpdatedAt, &ticketUser.CreatedBy.Username, &ticketUser.CreatedBy.Email,
 		&ticketUser.AssignTo.Username, &ticketUser.AssignTo.Email, &ticketUser.AssignBy.Username, &ticketUser.AssignBy.Email)
 

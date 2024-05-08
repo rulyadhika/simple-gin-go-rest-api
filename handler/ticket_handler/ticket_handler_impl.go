@@ -3,7 +3,6 @@ package tickethandler
 import (
 	"log"
 	"net/http"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -88,7 +87,13 @@ func (t *ticketHandlerImpl) FindAll(ctx *gin.Context) {
 }
 
 func (t *ticketHandlerImpl) FindOneByTicketId(ctx *gin.Context) {
-	ticketId := ctx.Param("ticketId")
+	ticketId, errParseUUID := uuid.Parse(ctx.Param("ticketId"))
+	if errParseUUID != nil {
+		log.Printf("[FindOneByTicketId - Handler], err: %s\n", errParseUUID.Error())
+		unprocessableEntityError := errs.NewUnprocessableEntityError("param ticketId must be a valid id")
+		ctx.AbortWithStatusJSON(unprocessableEntityError.StatusCode(), unprocessableEntityError)
+		return
+	}
 
 	result, err := t.ts.FindOneByTicketId(ctx, ticketId)
 
@@ -117,9 +122,10 @@ func (t *ticketHandlerImpl) AssignTicketToUser(ctx *gin.Context) {
 		return
 	}
 
-	ticketId := strings.TrimSpace(ctx.Param("ticketId"))
-	if ticketId == "" {
-		unprocessableEntityError := errs.NewUnprocessableEntityError("param ticketId must be a valid string")
+	ticketId, errParseUUID := uuid.Parse(ctx.Param("ticketId"))
+	if errParseUUID != nil {
+		log.Printf("[AssignTicketToUser - Handler], err: %s\n", errParseUUID.Error())
+		unprocessableEntityError := errs.NewUnprocessableEntityError("param ticketId must be a valid id")
 		ctx.AbortWithStatusJSON(unprocessableEntityError.StatusCode(), unprocessableEntityError)
 		return
 	}
@@ -173,9 +179,10 @@ func (t *ticketHandlerImpl) UpdateTicketStatus(ctx *gin.Context) {
 		return
 	}
 
-	ticketId := strings.TrimSpace(ctx.Param("ticketId"))
-	if ticketId == "" {
-		unprocessableEntityError := errs.NewUnprocessableEntityError("param ticketId must be a valid string")
+	ticketId, errParseUUID := uuid.Parse(ctx.Param("ticketId"))
+	if errParseUUID != nil {
+		log.Printf("[UpdateTicketStatus - Handler], err: %s\n", errParseUUID.Error())
+		unprocessableEntityError := errs.NewUnprocessableEntityError("param ticketId must be a valid id")
 		ctx.AbortWithStatusJSON(unprocessableEntityError.StatusCode(), unprocessableEntityError)
 		return
 	}

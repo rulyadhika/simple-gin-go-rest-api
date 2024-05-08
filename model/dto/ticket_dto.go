@@ -17,7 +17,6 @@ type NewTicketRequest struct {
 
 type NewTicketResponse struct {
 	Id          uuid.UUID             `json:"id"`
-	TicketId    string                `json:"ticket_id"`
 	Title       string                `json:"title"`
 	Description string                `json:"description"`
 	Priority    entity.TicketPriority `json:"priority"`
@@ -28,7 +27,6 @@ type NewTicketResponse struct {
 
 type TicketResponse struct {
 	Id          uuid.UUID              `json:"id"`
-	TicketId    string                 `json:"ticket_id"`
 	Title       string                 `json:"title"`
 	Description string                 `json:"description"`
 	Priority    entity.TicketPriority  `json:"priority"`
@@ -46,12 +44,12 @@ type TicketResponseUserData struct {
 }
 
 type AssignTicketToUserRequest struct {
-	TicketId   string
+	TicketId   uuid.UUID
 	AssignToId uuid.UUID
 	AssignById uuid.UUID
 }
 
 type UpdateTicketStatusRequest struct {
-	TicketId string
+	TicketId uuid.UUID
 	Status   entity.TicketStatus `json:"status" validate:"required,ticket_status_custom_validation"`
 }

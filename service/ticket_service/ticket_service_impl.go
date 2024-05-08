@@ -39,15 +39,12 @@ func (t *ticketServiceImpl) Create(ctx *gin.Context, ticketDto dto.NewTicketRequ
 		return nil, errs.NewBadRequestError(validationformatter.FormatValidationError(errValidate))
 	}
 
-	ticketId := uuid.NewString()
-
 	ticket := entity.Ticket{
 		Title:       ticketDto.Title,
 		Description: ticketDto.Description,
 		Priority:    ticketDto.Priority,
 		Status:      ticketDto.Status,
 		CreatedBy:   ticketDto.CreatedBy,
-		TicketId:    ticketId,
 	}
 
 	result, err := t.tr.Create(ctx, t.db, ticket)
@@ -58,7 +55,6 @@ func (t *ticketServiceImpl) Create(ctx *gin.Context, ticketDto dto.NewTicketRequ
 
 	return &dto.NewTicketResponse{
 		Id:          result.Id,
-		TicketId:    result.TicketId,
 		Title:       result.Title,
 		Description: result.Description,
 		Priority:    result.Priority,
@@ -96,7 +92,7 @@ func (t *ticketServiceImpl) FindAll(ctx *gin.Context, userId uuid.UUID, userRole
 	return &ticketsResponse, nil
 }
 
-func (t *ticketServiceImpl) FindOneByTicketId(ctx *gin.Context, ticketId string) (*dto.TicketResponse, errs.Error) {
+func (t *ticketServiceImpl) FindOneByTicketId(ctx *gin.Context, ticketId uuid.UUID) (*dto.TicketResponse, errs.Error) {
 	result, err := t.tr.FindOneByTicketId(ctx, t.db, ticketId)
 
 	if err != nil {
@@ -110,7 +106,7 @@ func (t *ticketServiceImpl) FindOneByTicketId(ctx *gin.Context, ticketId string)
 
 func (t *ticketServiceImpl) AssignTicketToUser(ctx *gin.Context, ticketDto dto.AssignTicketToUserRequest) (*dto.TicketResponse, errs.Error) {
 	ticket := entity.Ticket{
-		TicketId: ticketDto.TicketId,
+		Id:       ticketDto.TicketId,
 		AssignTo: ticketDto.AssignToId,
 		AssignBy: ticketDto.AssignById,
 		Status:   entity.TicketStatus_IN_PROGRESS,
@@ -147,8 +143,8 @@ func (t *ticketServiceImpl) UpdateTicketStatus(ctx *gin.Context, ticketDto dto.U
 	}
 
 	ticket := entity.Ticket{
-		TicketId: ticketDto.TicketId,
-		Status:   ticketDto.Status,
+		Id:     ticketDto.TicketId,
+		Status: ticketDto.Status,
 	}
 
 	// check whether the user is eligible to update ticket status based on their roles and what ticket status choosen
