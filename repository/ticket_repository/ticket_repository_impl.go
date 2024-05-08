@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/rulyadhika/simple-gin-go-rest-api/infra/packages/errs"
 	"github.com/rulyadhika/simple-gin-go-rest-api/model/entity"
 )
@@ -67,7 +68,7 @@ func (t *ticketRepositoryImpl) FindAll(ctx *gin.Context, db *sql.DB) (*[]TicketU
 	return &ticketsUser, nil
 }
 
-func (t *ticketRepositoryImpl) FindAllByUserId(ctx *gin.Context, db *sql.DB, userId uint32) (*[]TicketUser, errs.Error) {
+func (t *ticketRepositoryImpl) FindAllByUserId(ctx *gin.Context, db *sql.DB, userId uuid.UUID) (*[]TicketUser, errs.Error) {
 	sqlQuery := findAllTicketByUserIdQuery
 
 	ticketsUser := []TicketUser{}

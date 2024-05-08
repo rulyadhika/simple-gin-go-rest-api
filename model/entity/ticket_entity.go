@@ -1,6 +1,10 @@
 package entity
 
-import "time"
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
 
 type TicketPriority string
 type TicketStatus string
@@ -20,15 +24,15 @@ var (
 )
 
 type Ticket struct {
-	Id          uint32
+	Id          uuid.UUID
 	TicketId    string
 	Title       string
 	Description string
 	Priority    TicketPriority
 	Status      TicketStatus
-	CreatedBy   uint32
-	AssignTo    uint32
-	AssignBy    uint32
+	CreatedBy   uuid.UUID
+	AssignTo    uuid.UUID
+	AssignBy    uuid.UUID
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
 }

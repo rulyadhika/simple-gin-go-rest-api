@@ -3,10 +3,10 @@ package tickethandler
 import (
 	"log"
 	"net/http"
-	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/rulyadhika/simple-gin-go-rest-api/infra/packages/errs"
 	"github.com/rulyadhika/simple-gin-go-rest-api/infra/packages/jwt"
 	"github.com/rulyadhika/simple-gin-go-rest-api/model/dto"
@@ -124,17 +124,17 @@ func (t *ticketHandlerImpl) AssignTicketToUser(ctx *gin.Context) {
 		return
 	}
 
-	userId, errConvert := strconv.Atoi(ctx.Param("userId"))
+	userId, errConvert := uuid.Parse(ctx.Param("userId"))
 	if errConvert != nil {
 		log.Printf("[AssignTicketToUser - Handler], err: %s\n", errConvert.Error())
-		unprocessableEntityError := errs.NewUnprocessableEntityError("param userId must be a number")
+		unprocessableEntityError := errs.NewUnprocessableEntityError("param userId must be a valid id")
 		ctx.AbortWithStatusJSON(unprocessableEntityError.StatusCode(), unprocessableEntityError)
 		return
 	}
 
 	ticketDto := &dto.AssignTicketToUserRequest{
 		TicketId:   ticketId,
-		AssignToId: uint32(userId),
+		AssignToId: userId,
 		AssignById: user.Id,
 	}
 

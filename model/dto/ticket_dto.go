@@ -3,6 +3,7 @@ package dto
 import (
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/rulyadhika/simple-gin-go-rest-api/model/entity"
 )
 
@@ -11,11 +12,11 @@ type NewTicketRequest struct {
 	Description string                `json:"description" validate:"required"`
 	Priority    entity.TicketPriority `json:"priority" validate:"required,ticket_priority_custom_validation"`
 	Status      entity.TicketStatus   `validate:"required,ticket_status_custom_validation"`
-	CreatedBy   uint32                `validate:"required"`
+	CreatedBy   uuid.UUID             `validate:"required"`
 }
 
 type NewTicketResponse struct {
-	Id          uint32                `json:"id"`
+	Id          uuid.UUID             `json:"id"`
 	TicketId    string                `json:"ticket_id"`
 	Title       string                `json:"title"`
 	Description string                `json:"description"`
@@ -26,7 +27,7 @@ type NewTicketResponse struct {
 }
 
 type TicketResponse struct {
-	Id          uint32                 `json:"id"`
+	Id          uuid.UUID              `json:"id"`
 	TicketId    string                 `json:"ticket_id"`
 	Title       string                 `json:"title"`
 	Description string                 `json:"description"`
@@ -46,8 +47,8 @@ type TicketResponseUserData struct {
 
 type AssignTicketToUserRequest struct {
 	TicketId   string
-	AssignToId uint32
-	AssignById uint32
+	AssignToId uuid.UUID
+	AssignById uuid.UUID
 }
 
 type UpdateTicketStatusRequest struct {

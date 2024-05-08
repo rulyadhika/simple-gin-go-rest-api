@@ -68,7 +68,7 @@ func (t *ticketServiceImpl) Create(ctx *gin.Context, ticketDto dto.NewTicketRequ
 	}, nil
 }
 
-func (t *ticketServiceImpl) FindAll(ctx *gin.Context, userId uint32, userRoles []entity.UserType) (*[]dto.TicketResponse, errs.Error) {
+func (t *ticketServiceImpl) FindAll(ctx *gin.Context, userId uuid.UUID, userRoles []entity.UserType) (*[]dto.TicketResponse, errs.Error) {
 	var result *[]ticketrepository.TicketUser
 	var err errs.Error
 

@@ -1,12 +1,13 @@
 package userhandler
 
 import (
+	"fmt"
 	"log"
 	"net/http"
-	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/rulyadhika/simple-gin-go-rest-api/infra/packages/errs"
 	"github.com/rulyadhika/simple-gin-go-rest-api/model/dto"
 	"github.com/rulyadhika/simple-gin-go-rest-api/model/entity"
@@ -103,16 +104,16 @@ func (u *UserHandlerImpl) AssignReassignRoleToUser(ctx *gin.Context) {
 		return
 	}
 
-	userId, errConv := strconv.Atoi(ctx.Param("userId"))
+	userId, errConv := uuid.Parse(ctx.Param("userId"))
 	if errConv != nil {
 		log.Printf("[AssignReassignRoleToUser - Handler], err: %s\n", errConv.Error())
-		unprocessableEntityError := errs.NewUnprocessableEntityError("param userId must be a valid number")
+		unprocessableEntityError := errs.NewUnprocessableEntityError("param userId must be a valid id")
 		ctx.AbortWithStatusJSON(unprocessableEntityError.StatusCode(), unprocessableEntityError)
 		return
 	}
 
 	userDto := &dto.AssignRoleToUserRequest{
-		UserId: uint32(userId),
+		UserId: userId,
 		Role:   entity.UserType(roleName),
 	}
 
@@ -134,16 +135,16 @@ func (u *UserHandlerImpl) AssignReassignRoleToUser(ctx *gin.Context) {
 }
 
 func (u *UserHandlerImpl) Delete(ctx *gin.Context) {
-	userId, errConv := strconv.Atoi(ctx.Param("userId"))
+	userId, errConv := uuid.Parse(ctx.Param("userId"))
 
 	if errConv != nil {
 		log.Printf("[DeleteUser - Handler], err: %s\n", errConv.Error())
-		unprocessableEntityError := errs.NewUnprocessableEntityError("param userId must be a valid number")
+		unprocessableEntityError := errs.NewUnprocessableEntityError("param userId must be a valid id")
 		ctx.AbortWithStatusJSON(unprocessableEntityError.StatusCode(), unprocessableEntityError)
 		return
 	}
 
-	if err := u.us.Delete(ctx, uint32(userId)); err != nil {
+	if err := u.us.Delete(ctx, userId); err != nil {
 		ctx.AbortWithStatusJSON(err.StatusCode(), err)
 		return
 	}
@@ -151,7 +152,7 @@ func (u *UserHandlerImpl) Delete(ctx *gin.Context) {
 	response := dto.ApiResponse{
 		StatusCode: http.StatusOK,
 		Status:     http.StatusText(http.StatusOK),
-		Message:    "successfully delete user with id: " + strconv.Itoa(userId),
+		Message:    fmt.Sprintf("successfully delete user with id: %s", userId),
 		Data:       nil,
 	}
 

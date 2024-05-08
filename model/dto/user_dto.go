@@ -3,11 +3,12 @@ package dto
 import (
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/rulyadhika/simple-gin-go-rest-api/model/entity"
 )
 
 type UserResponse struct {
-	Id        uint32              `json:"id"`
+	Id        uuid.UUID           `json:"id"`
 	Username  string              `json:"username"`
 	Email     string              `json:"email"`
 	Roles     []UserRolesResponse `json:"roles"`
@@ -16,8 +17,8 @@ type UserResponse struct {
 }
 
 type UserRolesResponse struct {
-	Id   uint32 `json:"id"`
-	Name string `json:"name"`
+	Id   uuid.UUID `json:"id"`
+	Name string    `json:"name"`
 }
 
 type CreateNewUserRequest struct {
@@ -29,6 +30,6 @@ type CreateNewUserRequest struct {
 }
 
 type AssignRoleToUserRequest struct {
-	UserId uint32          `json:"user_id" validate:"required"`
+	UserId uuid.UUID       `json:"user_id" validate:"required"`
 	Role   entity.UserType `json:"role" validate:"required,user_roles_custom_validation"`
 }
