@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/rulyadhika/simple-gin-go-rest-api/infra/packages/errs"
 	"github.com/rulyadhika/simple-gin-go-rest-api/model/entity"
 )
@@ -140,7 +141,7 @@ func (u *UserRepositoryImpl) FindByUsername(ctx *gin.Context, db *sql.DB, userna
 	return &userRoles, nil
 }
 
-func (u *UserRepositoryImpl) FindById(ctx *gin.Context, db *sql.DB, id uint32) (*UserRoles, errs.Error) {
+func (u *UserRepositoryImpl) FindById(ctx *gin.Context, db *sql.DB, id uuid.UUID) (*UserRoles, errs.Error) {
 	sqlQuery := findOneUserByIdQuery
 
 	rows, err := db.QueryContext(ctx, sqlQuery, id)
@@ -177,7 +178,7 @@ func (u *UserRepositoryImpl) FindById(ctx *gin.Context, db *sql.DB, id uint32) (
 	return &userRoles, nil
 }
 
-func (u *UserRepositoryImpl) Delete(ctx *gin.Context, db *sql.DB, id uint32) errs.Error {
+func (u *UserRepositoryImpl) Delete(ctx *gin.Context, db *sql.DB, id uuid.UUID) errs.Error {
 	err := db.QueryRowContext(ctx, deleteUserQuery, id).Scan(&id)
 
 	if err != nil {

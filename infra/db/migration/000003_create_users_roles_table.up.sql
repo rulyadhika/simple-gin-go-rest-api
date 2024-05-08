@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS users_roles(
-    id SERIAL PRIMARY KEY NOT NULL,
-    user_id INT NOT NULL,
-    role_id INT NOT NULL,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid (),
+    user_id UUID NOT NULL,
+    role_id UUID NOT NULL,
     created_at timestamptz DEFAULT now(),
     updated_at timestamptz DEFAULT now(),
     FOREIGN KEY(user_id)

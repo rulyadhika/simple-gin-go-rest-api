@@ -3,11 +3,12 @@ package entity
 import (
 	"time"
 
+	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
 
 type User struct {
-	Id        uint32
+	Id        uuid.UUID
 	Username  string
 	Email     string
 	Password  string

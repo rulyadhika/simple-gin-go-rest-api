@@ -56,7 +56,7 @@ func (u *UserRoles) HandleMappingUsersRoles(userRoles []UserRole) *[]UserRoles {
 					CreatedAt: user.CreatedAt,
 					UpdatedAt: user.UpdatedAt,
 				}, Roles: []entity.Role{{
-					Id:       uint32(user.Role.Id),
+					Id:       user.Role.Id,
 					RoleName: user.Role.RoleName,
 				}},
 			}

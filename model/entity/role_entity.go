@@ -1,5 +1,7 @@
 package entity
 
+import "github.com/google/uuid"
+
 type UserType string
 
 func (u *UserType) ToString() string {
@@ -14,6 +16,6 @@ const (
 )
 
 type Role struct {
-	Id       uint32
+	Id       uuid.UUID
 	RoleName UserType
 }

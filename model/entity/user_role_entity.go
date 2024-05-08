@@ -1,11 +1,15 @@
 package entity
 
-import "time"
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
 
 type UserRole struct {
-	Id        uint32
-	UserId    uint32
-	RoleId    uint32
+	Id        uuid.UUID
+	UserId    uuid.UUID
+	RoleId    uuid.UUID
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }

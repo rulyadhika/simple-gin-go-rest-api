@@ -7,6 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
+	"github.com/google/uuid"
 	"github.com/rulyadhika/simple-gin-go-rest-api/infra/packages/errs"
 	"github.com/rulyadhika/simple-gin-go-rest-api/infra/packages/helper"
 	validationformatter "github.com/rulyadhika/simple-gin-go-rest-api/infra/packages/validation/validation_formatter"
@@ -187,7 +188,7 @@ func (u *UserServiceImpl) AssignReassignRoleToUser(ctx *gin.Context, userDto *dt
 	return helper.ToDtoUserResponse(user), nil
 }
 
-func (u *UserServiceImpl) Delete(ctx *gin.Context, userId uint32) errs.Error {
+func (u *UserServiceImpl) Delete(ctx *gin.Context, userId uuid.UUID) errs.Error {
 	if err := u.ur.Delete(ctx, u.db, userId); err != nil {
 		return err
 	}
