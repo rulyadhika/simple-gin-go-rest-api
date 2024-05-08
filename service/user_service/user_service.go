@@ -11,4 +11,5 @@ type UserService interface {
 	FindOneByUsername(ctx *gin.Context, username string) (*dto.UserResponse, errs.Error)
 	Create(ctx *gin.Context, userDto *dto.CreateNewUserRequest) (*dto.UserResponse, errs.Error)
 	AssignReassignRoleToUser(ctx *gin.Context, userDto *dto.AssignRoleToUserRequest) (*dto.UserResponse, errs.Error)
+	Delete(ctx *gin.Context, userId uint32) errs.Error
 }

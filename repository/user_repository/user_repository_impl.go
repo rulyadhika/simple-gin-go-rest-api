@@ -2,7 +2,9 @@ package userrepository
 
 import (
 	"database/sql"
+	"errors"
 	"log"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/rulyadhika/simple-gin-go-rest-api/infra/packages/errs"
@@ -173,4 +175,22 @@ func (u *UserRepositoryImpl) FindById(ctx *gin.Context, db *sql.DB, id uint32) (
 	userRoles.HandleMappingUserRoles(usersRoles)
 
 	return &userRoles, nil
+}
+
+func (u *UserRepositoryImpl) Delete(ctx *gin.Context, db *sql.DB, id uint32) errs.Error {
+	err := db.QueryRowContext(ctx, deleteUserQuery, id).Scan(&id)
+
+	if err != nil {
+		log.Printf("[DeleteUser - Repo] err: %s", err.Error())
+
+		if errors.Is(err, sql.ErrNoRows) {
+			return errs.NewNotFoundError("user not found")
+		} else if strings.Contains(err.Error(), "foreign key constraint") {
+			return errs.NewConflictError("cannot delete this user because of data constraints. alternatively, you can deactivate the user instead of deleting it")
+		}
+
+		return errs.NewInternalServerError("something went wrong")
+	}
+
+	return nil
 }

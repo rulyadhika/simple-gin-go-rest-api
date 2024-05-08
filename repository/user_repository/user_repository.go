@@ -14,4 +14,5 @@ type UserRepository interface {
 	FindById(ctx *gin.Context, db *sql.DB, id uint32) (*UserRoles, errs.Error)
 	FindByEmail(ctx *gin.Context, db *sql.DB, email string) (*UserRoles, errs.Error)
 	FindByUsername(ctx *gin.Context, db *sql.DB, username string) (*UserRoles, errs.Error)
+	Delete(ctx *gin.Context, db *sql.DB, id uint32) errs.Error
 }

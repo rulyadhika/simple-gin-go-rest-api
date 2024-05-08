@@ -132,3 +132,28 @@ func (u *UserHandlerImpl) AssignReassignRoleToUser(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, response)
 }
+
+func (u *UserHandlerImpl) Delete(ctx *gin.Context) {
+	userId, errConv := strconv.Atoi(ctx.Param("userId"))
+
+	if errConv != nil {
+		log.Printf("[DeleteUser - Handler], err: %s\n", errConv.Error())
+		unprocessableEntityError := errs.NewUnprocessableEntityError("param userId must be a valid number")
+		ctx.AbortWithStatusJSON(unprocessableEntityError.StatusCode(), unprocessableEntityError)
+		return
+	}
+
+	if err := u.us.Delete(ctx, uint32(userId)); err != nil {
+		ctx.AbortWithStatusJSON(err.StatusCode(), err)
+		return
+	}
+
+	response := dto.ApiResponse{
+		StatusCode: http.StatusOK,
+		Status:     http.StatusText(http.StatusOK),
+		Message:    "successfully delete user with id: " + strconv.Itoa(userId),
+		Data:       nil,
+	}
+
+	ctx.JSON(http.StatusOK, response)
+}

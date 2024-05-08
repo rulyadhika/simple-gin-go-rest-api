@@ -186,3 +186,11 @@ func (u *UserServiceImpl) AssignReassignRoleToUser(ctx *gin.Context, userDto *dt
 
 	return helper.ToDtoUserResponse(user), nil
 }
+
+func (u *UserServiceImpl) Delete(ctx *gin.Context, userId uint32) errs.Error {
+	if err := u.ur.Delete(ctx, u.db, userId); err != nil {
+		return err
+	}
+
+	return nil
+}
