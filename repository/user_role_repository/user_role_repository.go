@@ -10,5 +10,5 @@ import (
 
 type UserRoleRepository interface {
 	AssignRolesToUser(ctx *gin.Context, tx *sql.Tx, userRole []entity.UserRole) errs.Error
-	RevokeRoleFromUser(ctx *gin.Context, tx *sql.Tx, userRole entity.UserRole) errs.Error
+	RemoveRoleFromUser(ctx *gin.Context, tx *sql.Tx, userRole entity.UserRole) errs.Error
 }

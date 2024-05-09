@@ -10,8 +10,8 @@ func (u *UserType) ToString() string {
 
 const (
 	Role_ADMINISTRATOR      UserType = "administrator"
-	Role_SUPPORT_SUPERVISOR UserType = "support supervisor"
-	Role_SUPPORT_AGENT      UserType = "support agent"
+	Role_SUPPORT_SUPERVISOR UserType = "support-supervisor"
+	Role_SUPPORT_AGENT      UserType = "support-agent"
 	Role_CLIENT             UserType = "client"
 )
 
