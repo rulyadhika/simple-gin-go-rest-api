@@ -95,7 +95,7 @@ func (u *UserHandlerImpl) Create(ctx *gin.Context) {
 	ctx.JSON(http.StatusCreated, response)
 }
 
-func (u *UserHandlerImpl) AssignReassignRoleToUser(ctx *gin.Context) {
+func (u *UserHandlerImpl) AssignOrRemoveUserRole(ctx *gin.Context) {
 	roleName := strings.TrimSpace(ctx.Param("roleName"))
 
 	if roleName == "" {
@@ -106,7 +106,7 @@ func (u *UserHandlerImpl) AssignReassignRoleToUser(ctx *gin.Context) {
 
 	userId, errConv := uuid.Parse(ctx.Param("userId"))
 	if errConv != nil {
-		log.Printf("[AssignReassignRoleToUser - Handler], err: %s\n", errConv.Error())
+		log.Printf("[AssignOrRemoveUserRole - Handler], err: %s\n", errConv.Error())
 		unprocessableEntityError := errs.NewUnprocessableEntityError("param userId must be a valid id")
 		ctx.AbortWithStatusJSON(unprocessableEntityError.StatusCode(), unprocessableEntityError)
 		return
@@ -117,7 +117,7 @@ func (u *UserHandlerImpl) AssignReassignRoleToUser(ctx *gin.Context) {
 		Role:   entity.UserType(roleName),
 	}
 
-	result, err := u.us.AssignReassignRoleToUser(ctx, userDto)
+	result, err := u.us.AssignOrRemoveUserRole(ctx, userDto)
 
 	if err != nil {
 		ctx.AbortWithStatusJSON(err.StatusCode(), err)
@@ -127,7 +127,7 @@ func (u *UserHandlerImpl) AssignReassignRoleToUser(ctx *gin.Context) {
 	response := dto.ApiResponse{
 		StatusCode: http.StatusOK,
 		Status:     http.StatusText(http.StatusOK),
-		Message:    "successfully assign or reassign role to or from user",
+		Message:    "successfully assign or remove role to or from user",
 		Data:       result,
 	}
 

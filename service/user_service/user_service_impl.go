@@ -136,7 +136,7 @@ func (u *UserServiceImpl) Create(ctx *gin.Context, userDto *dto.CreateNewUserReq
 	return helper.ToDtoUserResponse(&newUser), nil
 }
 
-func (u *UserServiceImpl) AssignReassignRoleToUser(ctx *gin.Context, userDto *dto.AssignRoleToUserRequest) (*dto.UserResponse, errs.Error) {
+func (u *UserServiceImpl) AssignOrRemoveUserRole(ctx *gin.Context, userDto *dto.AssignRoleToUserRequest) (*dto.UserResponse, errs.Error) {
 	if errValidation := u.validate.Struct(userDto); errValidation != nil {
 		return nil, errs.NewBadRequestError(validationformatter.FormatValidationError(errValidation))
 	}
@@ -157,12 +157,12 @@ func (u *UserServiceImpl) AssignReassignRoleToUser(ctx *gin.Context, userDto *dt
 
 	tx, errTx := u.db.Begin()
 	if errTx != nil {
-		log.Printf("[AssignReassignRoleToUser - Service], err: %s\n", errTx.Error())
+		log.Printf("[AssignOrRemoveUserRole - Service], err: %s\n", errTx.Error())
 		tx.Rollback()
 		return nil, errs.NewInternalServerError("something went wrong")
 	}
 
-	if err := u.urr.RevokeRoleFromUser(ctx, tx, userRole); err != nil {
+	if err := u.urr.RemoveRoleFromUser(ctx, tx, userRole); err != nil {
 		// if when revoking role from user return not found then assign role to user
 		if err.Status() == http.StatusText(http.StatusNotFound) {
 			if err := u.urr.AssignRolesToUser(ctx, tx, []entity.UserRole{userRole}); err != nil {
@@ -176,7 +176,7 @@ func (u *UserServiceImpl) AssignReassignRoleToUser(ctx *gin.Context, userDto *dt
 	}
 
 	if commitErr := tx.Commit(); commitErr != nil {
-		log.Printf("[AssignReassignRoleToUser - Service] err: %v", commitErr.Error())
+		log.Printf("[AssignOrRemoveUserRole - Service] err: %v", commitErr.Error())
 		return nil, errs.NewInternalServerError("something went wrong")
 	}
 

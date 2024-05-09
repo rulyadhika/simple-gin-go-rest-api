@@ -14,7 +14,7 @@ func NewUserRoutes(r *gin.Engine, handler userhandler.UserHandler, authMiddlewar
 		userRoute.GET("/", authMiddleware.RoleAuthorization(entity.Role_ADMINISTRATOR), handler.FindAll)
 		userRoute.GET("/:username", authMiddleware.RoleAuthorization(entity.Role_ADMINISTRATOR), handler.FindOneByUsername)
 		userRoute.POST("/", authMiddleware.RoleAuthorization(entity.Role_ADMINISTRATOR), handler.Create)
-		userRoute.PATCH("/:userId/roles/:roleName", authMiddleware.RoleAuthorization(entity.Role_ADMINISTRATOR), handler.AssignReassignRoleToUser)
+		userRoute.POST("/:userId/roles/:roleName", authMiddleware.RoleAuthorization(entity.Role_ADMINISTRATOR), handler.AssignOrRemoveUserRole)
 		userRoute.DELETE("/:userId", authMiddleware.RoleAuthorization(entity.Role_ADMINISTRATOR), handler.Delete)
 	}
 }
