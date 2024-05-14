@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
@@ -13,6 +14,7 @@ import (
 	validationformatter "github.com/rulyadhika/simple-gin-go-rest-api/infra/packages/validation/validation_formatter"
 	"github.com/rulyadhika/simple-gin-go-rest-api/model/dto"
 	"github.com/rulyadhika/simple-gin-go-rest-api/model/entity"
+	accountactivationrepository "github.com/rulyadhika/simple-gin-go-rest-api/repository/account_activation_repository"
 	rolerepository "github.com/rulyadhika/simple-gin-go-rest-api/repository/role_repository"
 	userrepository "github.com/rulyadhika/simple-gin-go-rest-api/repository/user_repository"
 	userrolerepository "github.com/rulyadhika/simple-gin-go-rest-api/repository/user_role_repository"
@@ -22,16 +24,18 @@ type UserServiceImpl struct {
 	ur       userrepository.UserRepository
 	rr       rolerepository.RoleRepository
 	urr      userrolerepository.UserRoleRepository
+	aar      accountactivationrepository.AccountActivationRepository
 	db       *sql.DB
 	validate *validator.Validate
 }
 
 func NewUserServiceImpl(ur userrepository.UserRepository, rr rolerepository.RoleRepository,
-	urr userrolerepository.UserRoleRepository, db *sql.DB, validate *validator.Validate) UserService {
+	urr userrolerepository.UserRoleRepository, aar accountactivationrepository.AccountActivationRepository, db *sql.DB, validate *validator.Validate) UserService {
 	return &UserServiceImpl{
 		ur,
 		rr,
 		urr,
+		aar,
 		db,
 		validate,
 	}
@@ -121,6 +125,20 @@ func (u *UserServiceImpl) Create(ctx *gin.Context, userDto *dto.CreateNewUserReq
 		tx.Rollback()
 		return nil, err
 	}
+
+	// user account activation
+	accountActivation := entity.AccountActivation{
+		UserId:         result.Id,
+		Token:          helper.GenerateRandomHashString(),
+		RequestTime:    time.Now(),
+		ExpirationTime: time.Now().Add(15 * time.Minute),
+	}
+
+	if err := u.aar.Create(ctx, tx, accountActivation); err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+	// end of user account activation
 
 	if commitErr := tx.Commit(); commitErr != nil {
 		log.Printf("[CreateNewUser - Service] err: %v", commitErr.Error())

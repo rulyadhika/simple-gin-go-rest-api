@@ -27,6 +27,7 @@ func (u *UserRoles) HandleMappingUserRoles(userRole []UserRole) {
 			u.Password = data.Password
 			u.CreatedAt = data.CreatedAt
 			u.UpdatedAt = data.UpdatedAt
+			u.ActivatedAt = data.ActivatedAt
 		}
 
 		roles = append(roles, entity.Role{
@@ -49,12 +50,13 @@ func (u *UserRoles) HandleMappingUsersRoles(userRoles []UserRole) *[]UserRoles {
 		if index == -1 {
 			user := UserRoles{
 				User: entity.User{
-					Id:        user.User.Id,
-					Username:  user.Username,
-					Email:     user.Email,
-					Password:  user.Password,
-					CreatedAt: user.CreatedAt,
-					UpdatedAt: user.UpdatedAt,
+					Id:          user.User.Id,
+					Username:    user.Username,
+					Email:       user.Email,
+					Password:    user.Password,
+					CreatedAt:   user.CreatedAt,
+					UpdatedAt:   user.UpdatedAt,
+					ActivatedAt: user.ActivatedAt,
 				}, Roles: []entity.Role{{
 					Id:       user.Role.Id,
 					RoleName: user.Role.RoleName,

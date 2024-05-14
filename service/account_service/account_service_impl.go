@@ -60,8 +60,11 @@ func (a *accountServiceImpl) Activation(ctx *gin.Context, token string) errs.Err
 
 	// update user activation timestamps table
 	user := entity.User{
-		Id:          accountActivation.UserId,
-		ActivatedAt: time.Now(),
+		Id: accountActivation.UserId,
+		ActivatedAt: sql.NullTime{
+			Time:  time.Now(),
+			Valid: true,
+		},
 	}
 
 	if err := a.ur.UpdateUserActivation(ctx, tx, user); err != nil {

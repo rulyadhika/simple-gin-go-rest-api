@@ -1,6 +1,7 @@
 package entity
 
 import (
+	"database/sql"
 	"time"
 
 	"github.com/google/uuid"
@@ -14,7 +15,7 @@ type User struct {
 	Password    string
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
-	ActivatedAt time.Time
+	ActivatedAt sql.NullTime
 }
 
 func (u *User) HashPassword() error {
