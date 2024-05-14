@@ -8,12 +8,13 @@ import (
 )
 
 type User struct {
-	Id        uuid.UUID
-	Username  string
-	Email     string
-	Password  string
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	Id          uuid.UUID
+	Username    string
+	Email       string
+	Password    string
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+	ActivatedAt time.Time
 }
 
 func (u *User) HashPassword() error {

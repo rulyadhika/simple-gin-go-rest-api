@@ -19,3 +19,5 @@ const findAllUserQuery = `SELECT users.id, username, email, password, users.crea
 	JOIN roles on users_roles.role_id=roles.id ORDER BY users.id ASC`
 
 const deleteUserQuery = `DELETE FROM users WHERE id=$1 RETURNING id`
+
+const updateUserActivationQuery = `UPDATE users SET activated_at=$1 WHERE id=$2`

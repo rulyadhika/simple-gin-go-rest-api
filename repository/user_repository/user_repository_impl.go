@@ -195,3 +195,15 @@ func (u *UserRepositoryImpl) Delete(ctx *gin.Context, db *sql.DB, id uuid.UUID) 
 
 	return nil
 }
+
+func (u *UserRepositoryImpl) UpdateUserActivation(ctx *gin.Context, tx *sql.Tx, user entity.User) errs.Error {
+	_, err := tx.ExecContext(ctx, updateUserActivationQuery, user.ActivatedAt, user.Id)
+
+	if err != nil {
+		log.Printf("[UpdateUserActivation - Repo] err: %s", err.Error())
+
+		return errs.NewInternalServerError("something went wrong")
+	}
+
+	return nil
+}
