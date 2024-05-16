@@ -41,3 +41,30 @@ func (a *accountHandlerImpl) Activation(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, response)
 }
+
+func (a *accountHandlerImpl) ResendToken(ctx *gin.Context) {
+	resendTokenDto := &dto.ResendTokenRequest{}
+
+	if err := ctx.ShouldBindJSON(resendTokenDto); err != nil {
+		unprocessableEntityError := errs.NewUnprocessableEntityError("invalid json request body")
+		ctx.AbortWithStatusJSON(unprocessableEntityError.StatusCode(), unprocessableEntityError)
+		return
+	}
+
+	if err := a.as.ResendToken(ctx, *resendTokenDto); err != nil {
+		// only show error with status code other than 404
+		if err.Status() != http.StatusText(http.StatusNotFound) {
+			ctx.AbortWithStatusJSON(err.StatusCode(), err)
+			return
+		}
+	}
+
+	response := dto.ApiResponse{
+		StatusCode: http.StatusOK,
+		Status:     http.StatusText(http.StatusOK),
+		Message:    "Success! If the email you submitted is valid and registered in our system, you will receive an account activation link shortly.",
+		Data:       nil,
+	}
+
+	ctx.JSON(http.StatusOK, response)
+}

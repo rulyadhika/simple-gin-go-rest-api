@@ -8,7 +8,11 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
+	"github.com/rulyadhika/simple-gin-go-rest-api/infra/config"
 	"github.com/rulyadhika/simple-gin-go-rest-api/infra/packages/errs"
+	"github.com/rulyadhika/simple-gin-go-rest-api/infra/packages/helper"
+	validationformatter "github.com/rulyadhika/simple-gin-go-rest-api/infra/packages/validation/validation_formatter"
+	"github.com/rulyadhika/simple-gin-go-rest-api/model/dto"
 	"github.com/rulyadhika/simple-gin-go-rest-api/model/entity"
 	accountactivationrepository "github.com/rulyadhika/simple-gin-go-rest-api/repository/account_activation_repository"
 	userrepository "github.com/rulyadhika/simple-gin-go-rest-api/repository/user_repository"
@@ -82,6 +86,62 @@ func (a *accountServiceImpl) Activation(ctx *gin.Context, token string) errs.Err
 
 	if commitErr := tx.Commit(); commitErr != nil {
 		log.Printf("[AccountActivation - Service] err: %v", commitErr.Error())
+		return errs.NewInternalServerError("something went wrong")
+	}
+
+	return nil
+}
+
+func (a *accountServiceImpl) ResendToken(ctx *gin.Context, resendTokenDto dto.ResendTokenRequest) errs.Error {
+	if validationErr := a.validate.Struct(resendTokenDto); validationErr != nil {
+		return errs.NewBadRequestError(validationformatter.FormatValidationError(validationErr))
+	}
+
+	tx, errTx := a.db.Begin()
+	if errTx != nil {
+		log.Printf("[ResendToken - Service] err: %s", errTx.Error())
+		return errs.NewInternalServerError("something went wrong")
+	}
+
+	user, err := a.ur.FindByEmail(ctx, a.db, resendTokenDto.Email)
+
+	if err != nil {
+		return err
+	}
+
+	if user.ActivatedAt.Valid {
+		return errs.NewConflictError("the account has already been activated.")
+	}
+
+	accountActivationData, err := a.aar.FindOneByUserId(ctx, tx, user.Id)
+	if err != nil {
+		return err
+	}
+
+	// check if token is expired or not
+	if time.Now().Before(accountActivationData.ExpirationTime) {
+		// if not yet expired then resend token via email
+		// TODO: RESEND ACTIVATION LINK VIA EMAIL
+	} else {
+		// else then generate new token and send to email
+		accountActivation := entity.AccountActivation{
+			UserId:         user.Id,
+			Token:          helper.GenerateRandomHashString(),
+			RequestTime:    time.Now(),
+			ExpirationTime: time.Now().Add(config.GetAppConfig().ACCOUNT_ACTIVATION_TOKEN_EXPIRATION_DURATION),
+		}
+
+		if err := a.aar.Create(ctx, tx, accountActivation); err != nil {
+			tx.Rollback()
+			return err
+		}
+
+		// TODO: SEND ACTIVATION LINK VIA EMAIL
+	}
+	// end of check if token is expired or not
+
+	if commitErr := tx.Commit(); commitErr != nil {
+		log.Printf("[ResendToken - Service] err: %v", commitErr.Error())
 		return errs.NewInternalServerError("something went wrong")
 	}
 

@@ -9,17 +9,18 @@ import (
 )
 
 type appConfig struct {
-	DB_DIALECT                        string
-	DB_HOST                           string
-	DB_PORT                           string
-	DB_NAME                           string
-	DB_USER                           string
-	DB_PASSWORD                       string
-	APP_PORT                          string
-	ACCESS_TOKEN_SECRET               string
-	REFRESH_TOKEN_SECRET              string
-	ACCESS_TOKEN_EXPIRATION_DURATION  time.Duration
-	REFRESH_TOKEN_EXPIRATION_DURATION time.Duration
+	DB_DIALECT                                   string
+	DB_HOST                                      string
+	DB_PORT                                      string
+	DB_NAME                                      string
+	DB_USER                                      string
+	DB_PASSWORD                                  string
+	APP_PORT                                     string
+	ACCESS_TOKEN_SECRET                          string
+	REFRESH_TOKEN_SECRET                         string
+	ACCESS_TOKEN_EXPIRATION_DURATION             time.Duration
+	REFRESH_TOKEN_EXPIRATION_DURATION            time.Duration
+	ACCOUNT_ACTIVATION_TOKEN_EXPIRATION_DURATION time.Duration
 }
 
 func init() {
@@ -43,6 +44,12 @@ func GetAppConfig() *appConfig {
 		log.Fatal("failed to parse string to time.Duration, err:", err.Error())
 	}
 
+	accountActivationTokenExpDuration, err := time.ParseDuration(os.Getenv("ACCOUNT_ACTIVATION_TOKEN_EXPIRATION_DURATION"))
+
+	if err != nil {
+		log.Fatal("failed to parse string to time.Duration, err:", err.Error())
+	}
+
 	return &appConfig{
 		DB_DIALECT:                        os.Getenv("DB_DIALECT"),
 		DB_HOST:                           os.Getenv("DB_HOST"),
@@ -55,5 +62,6 @@ func GetAppConfig() *appConfig {
 		REFRESH_TOKEN_SECRET:              os.Getenv("REFRESH_TOKEN_SECRET"),
 		ACCESS_TOKEN_EXPIRATION_DURATION:  accessTokenExpDuration,
 		REFRESH_TOKEN_EXPIRATION_DURATION: refreshTokenExpDuration,
+		ACCOUNT_ACTIVATION_TOKEN_EXPIRATION_DURATION: accountActivationTokenExpDuration,
 	}
 }

@@ -9,6 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
+	"github.com/rulyadhika/simple-gin-go-rest-api/infra/config"
 	"github.com/rulyadhika/simple-gin-go-rest-api/infra/packages/errs"
 	"github.com/rulyadhika/simple-gin-go-rest-api/infra/packages/helper"
 	validationformatter "github.com/rulyadhika/simple-gin-go-rest-api/infra/packages/validation/validation_formatter"
@@ -131,13 +132,14 @@ func (u *UserServiceImpl) Create(ctx *gin.Context, userDto *dto.CreateNewUserReq
 		UserId:         result.Id,
 		Token:          helper.GenerateRandomHashString(),
 		RequestTime:    time.Now(),
-		ExpirationTime: time.Now().Add(15 * time.Minute),
+		ExpirationTime: time.Now().Add(config.GetAppConfig().ACCOUNT_ACTIVATION_TOKEN_EXPIRATION_DURATION),
 	}
 
 	if err := u.aar.Create(ctx, tx, accountActivation); err != nil {
 		tx.Rollback()
 		return nil, err
 	}
+	// TODO: SEND ACTIVATION LINK VIA EMAIL
 	// end of user account activation
 
 	if commitErr := tx.Commit(); commitErr != nil {

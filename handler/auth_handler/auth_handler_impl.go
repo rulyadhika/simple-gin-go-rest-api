@@ -41,7 +41,7 @@ func (a *AuthHandlerImpl) Register(ctx *gin.Context) {
 	response := dto.ApiResponse{
 		StatusCode: http.StatusCreated,
 		Status:     http.StatusText(http.StatusCreated),
-		Message:    "successfully registered a new user",
+		Message:    "successfully registered a new user. please check your email to activate the account",
 		Data:       result,
 	}
 

@@ -114,13 +114,14 @@ func (a *AuthServiceImpl) Register(ctx *gin.Context, userDto *dto.RegisterUserRe
 		UserId:         result.Id,
 		Token:          helper.GenerateRandomHashString(),
 		RequestTime:    time.Now(),
-		ExpirationTime: time.Now().Add(15 * time.Minute),
+		ExpirationTime: time.Now().Add(config.GetAppConfig().ACCOUNT_ACTIVATION_TOKEN_EXPIRATION_DURATION),
 	}
 
 	if err := a.AccountActivationRepository.Create(ctx, tx, accountActivation); err != nil {
 		tx.Rollback()
 		return nil, err
 	}
+	// TODO: SEND ACTIVATION LINK VIA EMAIL
 	// end of user account activation
 
 	if commitErr := tx.Commit(); commitErr != nil {

@@ -6,6 +6,7 @@ import (
 	"log"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/rulyadhika/simple-gin-go-rest-api/infra/packages/errs"
 	"github.com/rulyadhika/simple-gin-go-rest-api/model/entity"
 )
@@ -56,4 +57,21 @@ func (a *AccountActivationRepositoryImpl) Delete(ctx *gin.Context, tx *sql.Tx, t
 	}
 
 	return nil
+}
+
+func (a *AccountActivationRepositoryImpl) FindOneByUserId(ctx *gin.Context, tx *sql.Tx, userId uuid.UUID) (*entity.AccountActivation, errs.Error) {
+	account := new(entity.AccountActivation)
+
+	err := tx.QueryRowContext(ctx, findOneAccountByUserIdActivationDataQuery, userId).Scan(&account.UserId, &account.Token, &account.RequestTime, &account.ExpirationTime)
+	if err != nil {
+		log.Printf("[FindOneByUserIdAccountActivationData - Repo] err: %s", err.Error())
+
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, errs.NewNotFoundError("account activation data not found")
+		}
+
+		return nil, errs.NewInternalServerError("something went wrong")
+	}
+
+	return account, nil
 }

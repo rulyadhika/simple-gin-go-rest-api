@@ -58,5 +58,17 @@ func NewValidator() *validator.Validate {
 		return nil
 	}
 
+	err = validation.RegisterValidation("resend_token_type_custom_validation", func(fl validator.FieldLevel) bool {
+		terms := []string{"account_activation"}
+		value := fl.Field().Interface().(string)
+
+		return slices.Contains(terms, value)
+	})
+
+	if err != nil {
+		log.Println(err)
+		return nil
+	}
+
 	return validation
 }
