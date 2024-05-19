@@ -139,7 +139,12 @@ func (u *UserServiceImpl) Create(ctx *gin.Context, userDto *dto.CreateNewUserReq
 		tx.Rollback()
 		return nil, err
 	}
-	// TODO: SEND ACTIVATION LINK VIA EMAIL
+
+	// send activation link via email
+	go func() {
+		helper.SendTokenEmail(dto.SendTokenEmailRequest{ToEmailAddress: userDto.Email, Subject: "Account Activation", Username: userDto.Username, Token: accountActivation.Token})
+	}()
+
 	// end of user account activation
 
 	if commitErr := tx.Commit(); commitErr != nil {

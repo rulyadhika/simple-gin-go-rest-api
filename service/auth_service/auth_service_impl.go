@@ -121,7 +121,12 @@ func (a *AuthServiceImpl) Register(ctx *gin.Context, userDto *dto.RegisterUserRe
 		tx.Rollback()
 		return nil, err
 	}
-	// TODO: SEND ACTIVATION LINK VIA EMAIL
+
+	// send activation link via email
+	go func() {
+		helper.SendTokenEmail(dto.SendTokenEmailRequest{ToEmailAddress: result.Email, Subject: "Account Activation", Username: result.Username, Token: accountActivation.Token})
+	}()
+
 	// end of user account activation
 
 	if commitErr := tx.Commit(); commitErr != nil {
@@ -171,6 +176,11 @@ func (a *AuthServiceImpl) Login(ctx *gin.Context, userDto *dto.LoginUserRequest)
 	// check if password is valid
 	if passwordIsValid := user.ValidatePassword(userDto.Password); !passwordIsValid {
 		return nil, errs.NewBadRequestError("invalid login credential")
+	}
+
+	// check if account is activated or not
+	if !user.ActivatedAt.Valid {
+		return nil, errs.NewForbiddenError("Your account has not been activated. Please check your email for the activation link.")
 	}
 
 	appConfig := config.GetAppConfig()

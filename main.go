@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+
 	"github.com/gin-gonic/gin"
 	accounthandler "github.com/rulyadhika/simple-gin-go-rest-api/handler/account_handler"
 	authhandler "github.com/rulyadhika/simple-gin-go-rest-api/handler/auth_handler"
@@ -55,5 +57,5 @@ func main() {
 	routes.NewAccountRoutes(app, accountHandler)
 	// end of routes
 
-	app.Run(":" + appConfig.APP_PORT)
+	app.Run(fmt.Sprintf(": %v", appConfig.APP_PORT))
 }
