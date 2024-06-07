@@ -9,6 +9,6 @@ func NewAccountRoutes(r *gin.Engine, handler accounthandler.AccountHandler) {
 	accountRoute := r.Group("/accounts")
 	{
 		accountRoute.GET("/activation/:token", handler.Activation)
-		accountRoute.POST("/resend-token/", handler.ResendToken)
+		accountRoute.POST("/resend-activation-token/", handler.ResendActivationToken)
 	}
 }

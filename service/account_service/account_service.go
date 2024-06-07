@@ -8,5 +8,5 @@ import (
 
 type AccountService interface {
 	Activation(ctx *gin.Context, token string) errs.Error
-	ResendToken(ctx *gin.Context, resendTokenDto dto.ResendTokenRequest) errs.Error
+	ResendActivationToken(ctx *gin.Context, resendTokenDto dto.ResendActivationTokenRequest) (*dto.ResendActivationTokenRespone, errs.Error)
 }

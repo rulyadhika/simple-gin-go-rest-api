@@ -129,10 +129,10 @@ func (u *UserServiceImpl) Create(ctx *gin.Context, userDto *dto.CreateNewUserReq
 
 	// user account activation
 	accountActivation := entity.AccountActivation{
-		UserId:         result.Id,
-		Token:          helper.GenerateRandomHashString(),
-		RequestTime:    time.Now(),
-		ExpirationTime: time.Now().Add(config.GetAppConfig().ACCOUNT_ACTIVATION_TOKEN_EXPIRATION_DURATION),
+		UserId:                 result.Id,
+		Token:                  helper.GenerateRandomHashString(),
+		ExpirationTime:         time.Now().Add(config.GetAppConfig().ACCOUNT_ACTIVATION_TOKEN_EXPIRATION_DURATION),
+		NextRequestAvailableAt: time.Now().Add(1 * time.Minute),
 	}
 
 	if err := u.aar.Create(ctx, tx, accountActivation); err != nil {

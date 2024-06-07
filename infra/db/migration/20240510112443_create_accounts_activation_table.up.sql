@@ -4,5 +4,6 @@ CREATE TABLE
         token VARCHAR(255) UNIQUE NOT NULL,
         request_time TIMESTAMPTZ DEFAULT now (),
         expiration_time TIMESTAMPTZ NOT NULL,
+        next_request_available_at TIMESTAMPTZ DEFAULT NOT NULL,
         FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
     );

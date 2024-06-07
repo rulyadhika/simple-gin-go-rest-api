@@ -7,8 +7,9 @@ import (
 )
 
 type AccountActivation struct {
-	UserId         uuid.UUID
-	Token          string
-	RequestTime    time.Time
-	ExpirationTime time.Time
+	UserId                 uuid.UUID
+	Token                  string
+	RequestTime            time.Time
+	ExpirationTime         time.Time
+	NextRequestAvailableAt time.Time
 }

@@ -14,4 +14,5 @@ type AccountActivationRepository interface {
 	FindOne(ctx *gin.Context, tx *sql.Tx, token string) (*entity.AccountActivation, errs.Error)
 	FindOneByUserId(ctx *gin.Context, tx *sql.Tx, userId uuid.UUID) (*entity.AccountActivation, errs.Error)
 	Delete(ctx *gin.Context, tx *sql.Tx, token string) errs.Error
+	UpdateRequestTime(ctx *gin.Context, tx *sql.Tx, account entity.AccountActivation) errs.Error
 }

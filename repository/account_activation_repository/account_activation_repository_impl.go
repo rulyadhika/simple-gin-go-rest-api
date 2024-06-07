@@ -18,7 +18,7 @@ func NewAccountActivationRepositoryImpl() AccountActivationRepository {
 }
 
 func (a *AccountActivationRepositoryImpl) Create(ctx *gin.Context, tx *sql.Tx, account entity.AccountActivation) errs.Error {
-	_, err := tx.ExecContext(ctx, createAccountActivationDataQuery, account.UserId, account.Token, account.RequestTime, account.ExpirationTime)
+	_, err := tx.ExecContext(ctx, createAccountActivationDataQuery, account.UserId, account.Token, account.ExpirationTime, account.NextRequestAvailableAt)
 
 	if err != nil {
 		log.Printf("[CreateAccountActivationData - Repo] err: %s", err.Error())
@@ -32,7 +32,7 @@ func (a *AccountActivationRepositoryImpl) Create(ctx *gin.Context, tx *sql.Tx, a
 func (a *AccountActivationRepositoryImpl) FindOne(ctx *gin.Context, tx *sql.Tx, token string) (*entity.AccountActivation, errs.Error) {
 	account := new(entity.AccountActivation)
 
-	err := tx.QueryRowContext(ctx, findOneAccountActivationDataQuery, token).Scan(&account.UserId, &account.Token, &account.RequestTime, &account.ExpirationTime)
+	err := tx.QueryRowContext(ctx, findOneAccountActivationDataQuery, token).Scan(&account.UserId, &account.Token, &account.RequestTime, &account.ExpirationTime, &account.NextRequestAvailableAt)
 	if err != nil {
 		log.Printf("[FindOneAccountActivationData - Repo] err: %s", err.Error())
 
@@ -62,7 +62,7 @@ func (a *AccountActivationRepositoryImpl) Delete(ctx *gin.Context, tx *sql.Tx, t
 func (a *AccountActivationRepositoryImpl) FindOneByUserId(ctx *gin.Context, tx *sql.Tx, userId uuid.UUID) (*entity.AccountActivation, errs.Error) {
 	account := new(entity.AccountActivation)
 
-	err := tx.QueryRowContext(ctx, findOneAccountByUserIdActivationDataQuery, userId).Scan(&account.UserId, &account.Token, &account.RequestTime, &account.ExpirationTime)
+	err := tx.QueryRowContext(ctx, findOneAccountByUserIdActivationDataQuery, userId).Scan(&account.UserId, &account.Token, &account.RequestTime, &account.ExpirationTime, &account.NextRequestAvailableAt)
 	if err != nil {
 		log.Printf("[FindOneByUserIdAccountActivationData - Repo] err: %s", err.Error())
 
@@ -74,4 +74,16 @@ func (a *AccountActivationRepositoryImpl) FindOneByUserId(ctx *gin.Context, tx *
 	}
 
 	return account, nil
+}
+
+func (a *AccountActivationRepositoryImpl) UpdateRequestTime(ctx *gin.Context, tx *sql.Tx, account entity.AccountActivation) errs.Error {
+	_, err := tx.ExecContext(ctx, updateRequestTimeAccountActivationDataQuery, account.RequestTime, account.NextRequestAvailableAt, account.Token)
+
+	if err != nil {
+		log.Printf("[UpdateRequestTimeAccountActivationData - Repo] err: %s", err.Error())
+
+		return errs.NewInternalServerError("something went wrong")
+	}
+
+	return nil
 }
