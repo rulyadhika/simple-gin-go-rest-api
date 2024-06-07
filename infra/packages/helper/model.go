@@ -54,6 +54,11 @@ func ToDtoUsersResponse(data *[]userrepository.UserRoles) *[]dto.UserResponse {
 			UpdatedAt: user.UpdatedAt,
 		}
 
+		if user.ActivatedAt.Valid {
+			activatedAt := user.ActivatedAt.Time
+			ur.ActivatedAt = &activatedAt
+		}
+
 		userResponse = append(userResponse, ur)
 	}
 
@@ -77,6 +82,11 @@ func ToDtoUserResponse(data *userrepository.UserRoles) *dto.UserResponse {
 		Roles:     roles,
 		CreatedAt: data.CreatedAt,
 		UpdatedAt: data.UpdatedAt,
+	}
+
+	if data.ActivatedAt.Valid {
+		activatedAt := data.ActivatedAt.Time
+		userResponse.ActivatedAt = &activatedAt
 	}
 
 	return &userResponse

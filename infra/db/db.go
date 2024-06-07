@@ -13,7 +13,7 @@ import (
 func InitDB() *sql.DB {
 	appConfig := config.GetAppConfig()
 
-	db, err := sql.Open(appConfig.DB_DIALECT, fmt.Sprintf("host=%s port=%s dbname=%s user=%s password=%s sslmode=disable", appConfig.DB_HOST, appConfig.DB_PORT, appConfig.DB_NAME, appConfig.DB_USER, appConfig.DB_PASSWORD))
+	db, err := sql.Open(appConfig.DB_DIALECT, fmt.Sprintf("host=%s port=%v dbname=%s user=%s password=%s sslmode=disable", appConfig.DB_HOST, appConfig.DB_PORT, appConfig.DB_NAME, appConfig.DB_USER, appConfig.DB_PASSWORD))
 
 	if err != nil {
 		log.Fatalf("failed to parse postgres dsn. (%s)", err.Error())

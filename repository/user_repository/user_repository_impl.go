@@ -47,7 +47,7 @@ func (u *UserRepositoryImpl) FindAll(ctx *gin.Context, db *sql.DB) (*[]UserRoles
 
 	for rows.Next() {
 		userRole := UserRole{}
-		err := rows.Scan(&userRole.User.Id, &userRole.Username, &userRole.Email, &userRole.Password, &userRole.CreatedAt, &userRole.UpdatedAt, &userRole.Role.Id, &userRole.RoleName)
+		err := rows.Scan(&userRole.User.Id, &userRole.Username, &userRole.Email, &userRole.Password, &userRole.CreatedAt, &userRole.UpdatedAt, &userRole.ActivatedAt, &userRole.Role.Id, &userRole.RoleName)
 
 		if err != nil {
 			log.Printf("[FindAll - Repo] err: %s", err.Error())
@@ -83,7 +83,7 @@ func (u *UserRepositoryImpl) FindByEmail(ctx *gin.Context, db *sql.DB, email str
 
 	for rows.Next() {
 		userRole := UserRole{}
-		err := rows.Scan(&userRole.User.Id, &userRole.Username, &userRole.Email, &userRole.Password, &userRole.CreatedAt, &userRole.UpdatedAt, &userRole.Role.Id, &userRole.RoleName)
+		err := rows.Scan(&userRole.User.Id, &userRole.Username, &userRole.Email, &userRole.Password, &userRole.CreatedAt, &userRole.UpdatedAt, &userRole.ActivatedAt, &userRole.Role.Id, &userRole.RoleName)
 
 		if err != nil {
 			log.Printf("[FindByEmail - Repo] err: %s", err.Error())
@@ -120,7 +120,7 @@ func (u *UserRepositoryImpl) FindByUsername(ctx *gin.Context, db *sql.DB, userna
 
 	for rows.Next() {
 		userRole := UserRole{}
-		err := rows.Scan(&userRole.User.Id, &userRole.Username, &userRole.Email, &userRole.Password, &userRole.CreatedAt, &userRole.UpdatedAt, &userRole.Role.Id, &userRole.RoleName)
+		err := rows.Scan(&userRole.User.Id, &userRole.Username, &userRole.Email, &userRole.Password, &userRole.CreatedAt, &userRole.UpdatedAt, &userRole.ActivatedAt, &userRole.Role.Id, &userRole.RoleName)
 
 		if err != nil {
 			log.Printf("[FindByUsername - Repo] err: %s", err.Error())
@@ -157,7 +157,7 @@ func (u *UserRepositoryImpl) FindById(ctx *gin.Context, db *sql.DB, id uuid.UUID
 
 	for rows.Next() {
 		userRole := UserRole{}
-		err := rows.Scan(&userRole.User.Id, &userRole.Username, &userRole.Email, &userRole.Password, &userRole.CreatedAt, &userRole.UpdatedAt, &userRole.Role.Id, &userRole.RoleName)
+		err := rows.Scan(&userRole.User.Id, &userRole.Username, &userRole.Email, &userRole.Password, &userRole.CreatedAt, &userRole.UpdatedAt, &userRole.ActivatedAt, &userRole.Role.Id, &userRole.RoleName)
 
 		if err != nil {
 			log.Printf("[FindById - Repo] err: %s", err.Error())
@@ -189,6 +189,18 @@ func (u *UserRepositoryImpl) Delete(ctx *gin.Context, db *sql.DB, id uuid.UUID) 
 		} else if strings.Contains(err.Error(), "foreign key constraint") {
 			return errs.NewConflictError("cannot delete this user because of data constraints. alternatively, you can deactivate the user instead of deleting it")
 		}
+
+		return errs.NewInternalServerError("something went wrong")
+	}
+
+	return nil
+}
+
+func (u *UserRepositoryImpl) UpdateUserActivation(ctx *gin.Context, tx *sql.Tx, user entity.User) errs.Error {
+	_, err := tx.ExecContext(ctx, updateUserActivationQuery, user.ActivatedAt, user.Id)
+
+	if err != nil {
+		log.Printf("[UpdateUserActivation - Repo] err: %s", err.Error())
 
 		return errs.NewInternalServerError("something went wrong")
 	}

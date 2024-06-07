@@ -8,12 +8,13 @@ import (
 )
 
 type UserResponse struct {
-	Id        uuid.UUID           `json:"id"`
-	Username  string              `json:"username"`
-	Email     string              `json:"email"`
-	Roles     []UserRolesResponse `json:"roles"`
-	CreatedAt time.Time           `json:"created_at"`
-	UpdatedAt time.Time           `json:"updated_at"`
+	Id          uuid.UUID           `json:"id"`
+	Username    string              `json:"username"`
+	Email       string              `json:"email"`
+	Roles       []UserRolesResponse `json:"roles"`
+	CreatedAt   time.Time           `json:"created_at"`
+	UpdatedAt   time.Time           `json:"updated_at"`
+	ActivatedAt *time.Time          `json:"activated_at"`
 }
 
 type UserRolesResponse struct {

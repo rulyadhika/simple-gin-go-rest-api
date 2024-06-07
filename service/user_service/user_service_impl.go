@@ -4,15 +4,18 @@ import (
 	"database/sql"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
+	"github.com/rulyadhika/simple-gin-go-rest-api/infra/config"
 	"github.com/rulyadhika/simple-gin-go-rest-api/infra/packages/errs"
 	"github.com/rulyadhika/simple-gin-go-rest-api/infra/packages/helper"
 	validationformatter "github.com/rulyadhika/simple-gin-go-rest-api/infra/packages/validation/validation_formatter"
 	"github.com/rulyadhika/simple-gin-go-rest-api/model/dto"
 	"github.com/rulyadhika/simple-gin-go-rest-api/model/entity"
+	accountactivationrepository "github.com/rulyadhika/simple-gin-go-rest-api/repository/account_activation_repository"
 	rolerepository "github.com/rulyadhika/simple-gin-go-rest-api/repository/role_repository"
 	userrepository "github.com/rulyadhika/simple-gin-go-rest-api/repository/user_repository"
 	userrolerepository "github.com/rulyadhika/simple-gin-go-rest-api/repository/user_role_repository"
@@ -22,16 +25,18 @@ type UserServiceImpl struct {
 	ur       userrepository.UserRepository
 	rr       rolerepository.RoleRepository
 	urr      userrolerepository.UserRoleRepository
+	aar      accountactivationrepository.AccountActivationRepository
 	db       *sql.DB
 	validate *validator.Validate
 }
 
 func NewUserServiceImpl(ur userrepository.UserRepository, rr rolerepository.RoleRepository,
-	urr userrolerepository.UserRoleRepository, db *sql.DB, validate *validator.Validate) UserService {
+	urr userrolerepository.UserRoleRepository, aar accountactivationrepository.AccountActivationRepository, db *sql.DB, validate *validator.Validate) UserService {
 	return &UserServiceImpl{
 		ur,
 		rr,
 		urr,
+		aar,
 		db,
 		validate,
 	}
@@ -121,6 +126,26 @@ func (u *UserServiceImpl) Create(ctx *gin.Context, userDto *dto.CreateNewUserReq
 		tx.Rollback()
 		return nil, err
 	}
+
+	// user account activation
+	accountActivation := entity.AccountActivation{
+		UserId:                 result.Id,
+		Token:                  helper.GenerateRandomHashString(),
+		ExpirationTime:         time.Now().Add(config.GetAppConfig().ACCOUNT_ACTIVATION_TOKEN_EXPIRATION_DURATION),
+		NextRequestAvailableAt: time.Now().Add(1 * time.Minute),
+	}
+
+	if err := u.aar.Create(ctx, tx, accountActivation); err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+
+	// send activation link via email
+	go func() {
+		helper.SendTokenEmail(dto.SendTokenEmailRequest{ToEmailAddress: userDto.Email, Subject: "Account Activation", Username: userDto.Username, Token: accountActivation.Token})
+	}()
+
+	// end of user account activation
 
 	if commitErr := tx.Commit(); commitErr != nil {
 		log.Printf("[CreateNewUser - Service] err: %v", commitErr.Error())

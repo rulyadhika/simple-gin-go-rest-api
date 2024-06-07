@@ -10,30 +10,34 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/rulyadhika/simple-gin-go-rest-api/infra/config"
 	"github.com/rulyadhika/simple-gin-go-rest-api/infra/packages/errs"
+	"github.com/rulyadhika/simple-gin-go-rest-api/infra/packages/helper"
 	"github.com/rulyadhika/simple-gin-go-rest-api/infra/packages/jwt"
 	validationformatter "github.com/rulyadhika/simple-gin-go-rest-api/infra/packages/validation/validation_formatter"
 	"github.com/rulyadhika/simple-gin-go-rest-api/model/dto"
 	"github.com/rulyadhika/simple-gin-go-rest-api/model/entity"
+	accountactivationrepository "github.com/rulyadhika/simple-gin-go-rest-api/repository/account_activation_repository"
 	rolerepository "github.com/rulyadhika/simple-gin-go-rest-api/repository/role_repository"
 	userrepository "github.com/rulyadhika/simple-gin-go-rest-api/repository/user_repository"
 	userrolerepository "github.com/rulyadhika/simple-gin-go-rest-api/repository/user_role_repository"
 )
 
 type AuthServiceImpl struct {
-	UserRepository     userrepository.UserRepository
-	DB                 *sql.DB
-	Validate           *validator.Validate
-	UserRoleRepository userrolerepository.UserRoleRepository
-	RoleRepository     rolerepository.RoleRepository
+	UserRepository              userrepository.UserRepository
+	DB                          *sql.DB
+	Validate                    *validator.Validate
+	UserRoleRepository          userrolerepository.UserRoleRepository
+	RoleRepository              rolerepository.RoleRepository
+	AccountActivationRepository accountactivationrepository.AccountActivationRepository
 }
 
-func NewAuthServiceImpl(userRepository userrepository.UserRepository, userRoleRepository userrolerepository.UserRoleRepository, roleRepository rolerepository.RoleRepository, db *sql.DB, validator *validator.Validate) AuthService {
+func NewAuthServiceImpl(userRepository userrepository.UserRepository, userRoleRepository userrolerepository.UserRoleRepository, roleRepository rolerepository.RoleRepository, accountActivationRepository accountactivationrepository.AccountActivationRepository, db *sql.DB, validator *validator.Validate) AuthService {
 	return &AuthServiceImpl{
-		UserRepository:     userRepository,
-		DB:                 db,
-		Validate:           validator,
-		UserRoleRepository: userRoleRepository,
-		RoleRepository:     roleRepository,
+		UserRepository:              userRepository,
+		DB:                          db,
+		Validate:                    validator,
+		UserRoleRepository:          userRoleRepository,
+		RoleRepository:              roleRepository,
+		AccountActivationRepository: accountActivationRepository,
 	}
 }
 
@@ -93,16 +97,37 @@ func (a *AuthServiceImpl) Register(ctx *gin.Context, userDto *dto.RegisterUserRe
 		return nil, err
 	}
 
+	// assign user roles
 	userRoles := []entity.UserRole{}
 	for _, role := range *roles {
 		userRoles = append(userRoles, entity.UserRole{UserId: result.Id, RoleId: role.Id})
 	}
 
-	err = a.UserRoleRepository.AssignRolesToUser(ctx, tx, userRoles)
-	if err != nil {
+	if err = a.UserRoleRepository.AssignRolesToUser(ctx, tx, userRoles); err != nil {
 		tx.Rollback()
 		return nil, err
 	}
+	// end of assign user roles
+
+	// user account activation
+	accountActivation := entity.AccountActivation{
+		UserId:                 result.Id,
+		Token:                  helper.GenerateRandomHashString(),
+		ExpirationTime:         time.Now().Add(config.GetAppConfig().ACCOUNT_ACTIVATION_TOKEN_EXPIRATION_DURATION),
+		NextRequestAvailableAt: time.Now().Add(1 * time.Minute),
+	}
+
+	if err := a.AccountActivationRepository.Create(ctx, tx, accountActivation); err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+
+	// send activation link via email
+	go func() {
+		helper.SendTokenEmail(dto.SendTokenEmailRequest{ToEmailAddress: result.Email, Subject: "Account Activation", Username: result.Username, Token: accountActivation.Token})
+	}()
+
+	// end of user account activation
 
 	if commitErr := tx.Commit(); commitErr != nil {
 		log.Printf("[Register - Service] err: %v", commitErr.Error())
@@ -151,6 +176,11 @@ func (a *AuthServiceImpl) Login(ctx *gin.Context, userDto *dto.LoginUserRequest)
 	// check if password is valid
 	if passwordIsValid := user.ValidatePassword(userDto.Password); !passwordIsValid {
 		return nil, errs.NewBadRequestError("invalid login credential")
+	}
+
+	// check if account is activated or not
+	if !user.ActivatedAt.Valid {
+		return nil, errs.NewForbiddenError("Your account has not been activated. Please check your email for the activation link.")
 	}
 
 	appConfig := config.GetAppConfig()
