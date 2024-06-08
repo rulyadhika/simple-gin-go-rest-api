@@ -11,8 +11,22 @@ import (
 	"github.com/rulyadhika/simple-gin-go-rest-api/model/dto"
 )
 
-func SendTokenEmail(data dto.SendTokenEmailRequest) error {
-	htmlEmailBody, err := NewEmailHTMLImpl().GenerateSendTokenEmailHTML(data.Username, data.Token)
+func SendActivationTokenEmail(data dto.SendActivationTokenEmailRequest) error {
+	htmlEmailBody, err := NewEmailHTMLImpl().GenerateSendActivationTokenEmailHTML(data.Username, data.Token)
+
+	if err != nil {
+		return err
+	}
+
+	if err := sendMail(data.Subject, []string{data.ToEmailAddress}, []byte(*htmlEmailBody)); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func SendPasswordResetTokenEmail(data dto.SendResetPasswordTokenEmailRequest) error {
+	htmlEmailBody, err := NewEmailHTMLImpl().GenerateSendPasswordResetTokenEmailHTML(data.Username, data.Token, data.ExpiredAt)
 
 	if err != nil {
 		return err

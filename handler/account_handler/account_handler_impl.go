@@ -51,7 +51,7 @@ func (a *accountHandlerImpl) ResendActivationToken(ctx *gin.Context) {
 		return
 	}
 
-	result, err := a.as.ResendActivationToken(ctx, *resendTokenDto)
+	result, err := a.as.ResendActivationToken(ctx, resendTokenDto)
 
 	if err != nil {
 		// only show error with status code other than 404
@@ -65,6 +65,35 @@ func (a *accountHandlerImpl) ResendActivationToken(ctx *gin.Context) {
 		StatusCode: http.StatusOK,
 		Status:     http.StatusText(http.StatusOK),
 		Message:    "Success! If the email you submitted is valid and registered in our system, you will receive an account activation link shortly.",
+		Data:       result,
+	}
+
+	ctx.JSON(http.StatusOK, response)
+}
+
+func (a *accountHandlerImpl) ForgotPassword(ctx *gin.Context) {
+	forgotPasswordDto := new(dto.ForgotPasswordRequest)
+
+	if err := ctx.ShouldBindJSON(forgotPasswordDto); err != nil {
+		unprocessableEntityError := errs.NewUnprocessableEntityError("invalid json request body")
+		ctx.AbortWithStatusJSON(unprocessableEntityError.StatusCode(), unprocessableEntityError)
+		return
+	}
+
+	result, err := a.as.ForgotPassword(ctx, forgotPasswordDto)
+
+	if err != nil {
+		// only show error with status code other than 404
+		if err.Status() != http.StatusText(http.StatusNotFound) {
+			ctx.AbortWithStatusJSON(err.StatusCode(), err)
+			return
+		}
+	}
+
+	response := dto.ApiResponse{
+		StatusCode: http.StatusOK,
+		Status:     http.StatusText(http.StatusOK),
+		Message:    "Success! If the email you submitted is valid and registered in our system, you will receive a password reset token shortly.",
 		Data:       result,
 	}
 
