@@ -13,4 +13,6 @@ type AccountPasswordResetRepository interface {
 	Create(ctx *gin.Context, tx *sql.Tx, account entity.AccountPasswordReset) errs.Error
 	FindOneByUserId(ctx *gin.Context, tx *sql.Tx, userId uuid.UUID) (*entity.AccountPasswordReset, errs.Error)
 	UpdateRequestTime(ctx *gin.Context, tx *sql.Tx, account entity.AccountPasswordReset) errs.Error
+	FindOneByToken(ctx *gin.Context, tx *sql.Tx, token string) (*entity.AccountPasswordReset, errs.Error)
+	Delete(ctx *gin.Context, tx *sql.Tx, token string) errs.Error
 }

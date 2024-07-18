@@ -21,3 +21,5 @@ const findAllUserQuery = `SELECT users.id, username, email, password, users.crea
 const deleteUserQuery = `DELETE FROM users WHERE id=$1 RETURNING id`
 
 const updateUserActivationQuery = `UPDATE users SET activated_at=$1 WHERE id=$2`
+
+const updateUserPasswordQuery = `UPDATE users SET password=$1 WHERE id=$2`

@@ -287,5 +287,73 @@ func (a *accountServiceImpl) ForgotPassword(ctx *gin.Context, forgotPasswordDto 
 		return nil, errs.NewInternalServerError("something went wrong")
 	}
 
+	// set cookie for frontend
+	ctx.SetCookie("reset-password", user.Email, 24*60*60, "/", "", false, true) //max age: a day
+
 	return forgotPasswordResponse, nil
+}
+
+func (a *accountServiceImpl) ResetPassword(ctx *gin.Context, resetPasswordDto *dto.ResetPasswordRequest) errs.Error {
+	if validationErr := a.validate.Struct(resetPasswordDto); validationErr != nil {
+		return errs.NewBadRequestError(validationformatter.FormatValidationError(validationErr))
+	}
+
+	tx, errTx := a.db.Begin()
+	if errTx != nil {
+		log.Printf("[ResetPassword - Service] err: %s", errTx.Error())
+
+		return errs.NewInternalServerError("something went wrong")
+	}
+
+	// get reset password data (check if token valid)
+	resetPwdData, err := a.aprr.FindOneByToken(ctx, tx, resetPasswordDto.Token)
+	if err != nil {
+		tx.Rollback()
+
+		// if error is not internal server error return different error
+		if err.Status() != http.StatusText(http.StatusInternalServerError) {
+			return errs.NewConflictError("token is invalid or expired")
+		}
+
+		return err
+	}
+
+	// check if token is expired
+	if !time.Now().Before(resetPwdData.ExpirationTime) {
+		// if token is expired
+		tx.Rollback()
+
+		return errs.NewConflictError("token is invalid or expired")
+	}
+
+	// create user entity and hash the password
+	user := entity.User{Id: resetPwdData.UserId, Password: resetPasswordDto.NewPassword}
+	if err := user.HashPassword(); err != nil {
+		tx.Rollback()
+		log.Printf("[ResetPassword - Repo] err: %s", err.Error())
+
+		return errs.NewInternalServerError("something went wrong")
+	}
+
+	// update user password
+	if err := a.ur.UpdateUserPassword(ctx, tx, user); err != nil {
+		tx.Rollback()
+
+		return err
+	}
+
+	// delete reset password data
+	if err := a.aprr.Delete(ctx, tx, resetPasswordDto.Token); err != nil {
+		tx.Rollback()
+
+		return err
+	}
+
+	// commit changes
+	if errCommit := tx.Commit(); errCommit != nil {
+		log.Printf("[ResetPassword - Repo] err: %s", errCommit.Error())
+		return errs.NewInternalServerError("something went wrong")
+	}
+
+	return nil
 }

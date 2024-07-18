@@ -99,3 +99,27 @@ func (a *accountHandlerImpl) ForgotPassword(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, response)
 }
+
+func (a *accountHandlerImpl) ResetPassword(ctx *gin.Context) {
+	resetPasswordDto := new(dto.ResetPasswordRequest)
+
+	if err := ctx.ShouldBindJSON(resetPasswordDto); err != nil {
+		unprocessableEntityError := errs.NewUnprocessableEntityError("invalid json request body")
+		ctx.AbortWithStatusJSON(unprocessableEntityError.StatusCode(), unprocessableEntityError)
+		return
+	}
+
+	if err := a.as.ResetPassword(ctx, resetPasswordDto); err != nil {
+		ctx.AbortWithStatusJSON(err.StatusCode(), err)
+		return
+	}
+
+	response := dto.ApiResponse{
+		StatusCode: http.StatusOK,
+		Status:     http.StatusText(http.StatusOK),
+		Message:    "Success! Your account password have been updated",
+		Data:       nil,
+	}
+
+	ctx.JSON(http.StatusOK, response)
+}

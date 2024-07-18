@@ -57,3 +57,33 @@ func (a *accountPasswordResetRepositoryImpl) UpdateRequestTime(ctx *gin.Context,
 
 	return nil
 }
+
+func (a *accountPasswordResetRepositoryImpl) FindOneByToken(ctx *gin.Context, tx *sql.Tx, token string) (*entity.AccountPasswordReset, errs.Error) {
+	data := new(entity.AccountPasswordReset)
+
+	err := tx.QueryRowContext(ctx, findOneAccountPasswordResetDataByTokenQuery, token).Scan(&data.UserId, &data.Token, &data.RequestTime, &data.ExpirationTime, &data.NextRequestAvailableAt)
+
+	if err != nil {
+		log.Printf("[FindOneByToken - Repo] err: %s", err.Error())
+
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, errs.NewNotFoundError("reset password data not found")
+		}
+
+		return nil, errs.NewInternalServerError("something went wrong")
+	}
+
+	return data, nil
+}
+
+func (a *accountPasswordResetRepositoryImpl) Delete(ctx *gin.Context, tx *sql.Tx, token string) errs.Error {
+	_, err := tx.ExecContext(ctx, deleteAccountPasswordResetDataByTokenQuery, token)
+
+	if err != nil {
+		log.Printf("[DeleteAccountPasswordReset - Repo], err: %s", err.Error())
+
+		return errs.NewInternalServerError("something went wrong")
+	}
+
+	return nil
+}

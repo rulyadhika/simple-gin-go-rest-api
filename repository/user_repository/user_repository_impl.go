@@ -207,3 +207,14 @@ func (u *UserRepositoryImpl) UpdateUserActivation(ctx *gin.Context, tx *sql.Tx, 
 
 	return nil
 }
+
+func (u *UserRepositoryImpl) UpdateUserPassword(ctx *gin.Context, tx *sql.Tx, user entity.User) errs.Error {
+	_, err := tx.ExecContext(ctx, updateUserPasswordQuery, user.Password, user.Id)
+
+	if err != nil {
+		log.Printf("[UpdateUserPassword - Repo] err: %s", err.Error())
+		return errs.NewInternalServerError("something went wrong")
+	}
+
+	return nil
+}

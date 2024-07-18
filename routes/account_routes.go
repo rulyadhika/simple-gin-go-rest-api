@@ -12,5 +12,6 @@ func NewAccountRoutes(r *gin.Engine, handler accounthandler.AccountHandler) {
 		accountRoute.POST("/resend-activation-token/", handler.ResendActivationToken)
 
 		accountRoute.POST("/forgot-password/", handler.ForgotPassword)
+		accountRoute.POST("/reset-password/", handler.ResetPassword)
 	}
 }

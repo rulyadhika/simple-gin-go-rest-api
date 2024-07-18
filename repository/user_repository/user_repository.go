@@ -17,4 +17,5 @@ type UserRepository interface {
 	FindByUsername(ctx *gin.Context, db *sql.DB, username string) (*UserRoles, errs.Error)
 	Delete(ctx *gin.Context, db *sql.DB, id uuid.UUID) errs.Error
 	UpdateUserActivation(ctx *gin.Context, tx *sql.Tx, user entity.User) errs.Error
+	UpdateUserPassword(ctx *gin.Context, tx *sql.Tx, user entity.User) errs.Error
 }
