@@ -13,6 +13,7 @@ import (
 	authmiddleware "github.com/rulyadhika/simple-gin-go-rest-api/infra/middleware/auth_middleware"
 	"github.com/rulyadhika/simple-gin-go-rest-api/infra/packages/validation"
 	accountactivationrepository "github.com/rulyadhika/simple-gin-go-rest-api/repository/account_activation_repository"
+	accountpasswordresetrepository "github.com/rulyadhika/simple-gin-go-rest-api/repository/account_password_reset_repository"
 	rolerepository "github.com/rulyadhika/simple-gin-go-rest-api/repository/role_repository"
 	ticketrepository "github.com/rulyadhika/simple-gin-go-rest-api/repository/ticket_repository"
 	userrepository "github.com/rulyadhika/simple-gin-go-rest-api/repository/user_repository"
@@ -35,11 +36,12 @@ func main() {
 	userRoleRepository := userrolerepository.NewUserRoleRepositoryImpl()
 	roleRepository := rolerepository.NewRoleRepositoryImpl()
 	ticketRepository := ticketrepository.NewTicketRepositoryImpl()
+	accountPasswordResetRepository := accountpasswordresetrepository.NewAccountPasswordResetRepositoryImpl()
 
 	authService := authservice.NewAuthServiceImpl(userRepository, userRoleRepository, roleRepository, accountActivationRepository, db, validator)
 	ticketService := ticketservice.NewTicketServiceImpl(ticketRepository, userRepository, db, validator)
 	userService := userservice.NewUserServiceImpl(userRepository, roleRepository, userRoleRepository, accountActivationRepository, db, validator)
-	accountService := accountservice.NewAccountServiceImpl(accountActivationRepository, userRepository, db, validator)
+	accountService := accountservice.NewAccountServiceImpl(accountActivationRepository, userRepository, accountPasswordResetRepository, db, validator)
 
 	authHandler := authhandler.NewAuthHandlerImpl(authService)
 	ticketHandler := tickethandler.NewTicketHandlerImpl(ticketService)

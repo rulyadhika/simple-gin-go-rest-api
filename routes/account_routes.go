@@ -8,7 +8,10 @@ import (
 func NewAccountRoutes(r *gin.Engine, handler accounthandler.AccountHandler) {
 	accountRoute := r.Group("/accounts")
 	{
-		accountRoute.GET("/activation/:token", handler.Activation)
+		accountRoute.POST("/activation/:token", handler.Activation)
 		accountRoute.POST("/resend-activation-token/", handler.ResendActivationToken)
+
+		accountRoute.POST("/forgot-password/", handler.ForgotPassword)
+		accountRoute.POST("/reset-password/", handler.ResetPassword)
 	}
 }

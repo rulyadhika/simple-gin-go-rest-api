@@ -10,3 +10,17 @@ type ResendActivationTokenRespone struct {
 	RequestTime            time.Time `json:"request_time"`
 	NextRequestAvailableAt time.Time `json:"next_request_available_at"`
 }
+
+type ForgotPasswordRequest struct {
+	Email string `json:"email" validate:"required,email"`
+}
+
+type ForgotPasswordRespone struct {
+	RequestTime            time.Time `json:"request_time"`
+	NextRequestAvailableAt time.Time `json:"next_request_available_at"`
+}
+
+type ResetPasswordRequest struct {
+	Token       string `json:"token" validate:"required"`
+	NewPassword string `json:"new_password" validate:"required"`
+}

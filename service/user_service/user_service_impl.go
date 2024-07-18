@@ -142,7 +142,7 @@ func (u *UserServiceImpl) Create(ctx *gin.Context, userDto *dto.CreateNewUserReq
 
 	// send activation link via email
 	go func() {
-		helper.SendTokenEmail(dto.SendTokenEmailRequest{ToEmailAddress: userDto.Email, Subject: "Account Activation", Username: userDto.Username, Token: accountActivation.Token})
+		helper.SendActivationTokenEmail(dto.SendActivationTokenEmailRequest{ToEmailAddress: userDto.Email, Subject: "Account Activation", Username: userDto.Username, Token: accountActivation.Token})
 	}()
 
 	// end of user account activation

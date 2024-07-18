@@ -4,6 +4,7 @@ import (
 	"crypto/md5"
 	"crypto/rand"
 	"encoding/hex"
+	mathRand "math/rand"
 )
 
 func GenerateRandomHashString() string {
@@ -20,4 +21,15 @@ func GenerateRandomHashString() string {
 	hashString := hex.EncodeToString(hash[:])
 
 	return hashString
+}
+
+func GenerateFixedLengthRandomNumber(length int) string {
+	digits := "0123456789"
+	randNumber := make([]byte, length)
+
+	for i, _ := range randNumber {
+		randNumber[i] = digits[mathRand.Intn(len(digits))]
+	}
+
+	return string(randNumber)
 }

@@ -9,7 +9,8 @@ import (
 )
 
 type EmailHTML interface {
-	GenerateSendTokenEmailHTML(username string, token string) (*string, error)
+	GenerateSendActivationTokenEmailHTML(username string, token string) (*string, error)
+	GenerateSendPasswordResetTokenEmailHTML(username string, token string, expiredAt string) (*string, error)
 }
 
 type emailHTMLImpl struct{}
@@ -18,7 +19,7 @@ func NewEmailHTMLImpl() EmailHTML {
 	return &emailHTMLImpl{}
 }
 
-func (e *emailHTMLImpl) GenerateSendTokenEmailHTML(username string, token string) (*string, error) {
+func (e *emailHTMLImpl) GenerateSendActivationTokenEmailHTML(username string, token string) (*string, error) {
 	email := hermes.Email{
 		Body: hermes.Body{
 			Name: username,
@@ -50,6 +51,37 @@ func (e *emailHTMLImpl) GenerateSendTokenEmailHTML(username string, token string
 	return htmlString, nil
 }
 
+func (e *emailHTMLImpl) GenerateSendPasswordResetTokenEmailHTML(username string, token string, expiredAt string) (*string, error) {
+	email := hermes.Email{
+		Body: hermes.Body{
+			Name: username,
+			Intros: []string{
+				fmt.Sprintf("You have received this email because a password reset request for %s IT Helpdesk System account was received.", config.GetAppConfig().EMAIL_SENDER_IDENTITY),
+			},
+			Actions: []hermes.Action{
+				{
+					Instructions: "To reset your account password, Please use the code below:",
+					InviteCode:   token,
+				},
+			},
+			Outros: []string{
+				fmt.Sprintf("The code above is only valid until %s. Please enter the code immediately.", expiredAt),
+				"Please do not share the OTP code with anyone to keep your data confidential.",
+				"If you didn't make this request, you can safely ignore this mail. No changes will be made to your account information.",
+				"This is an automated email, please don't send or reply to this email.",
+			},
+		},
+	}
+
+	htmlString, err := e.generateHTML(&email)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return htmlString, nil
+}
+
 func (e *emailHTMLImpl) generateHTML(email *hermes.Email) (*string, error) {
 	h := hermes.Hermes{
 		Product: hermes.Product{
@@ -57,6 +89,8 @@ func (e *emailHTMLImpl) generateHTML(email *hermes.Email) (*string, error) {
 			Name: config.GetAppConfig().EMAIL_SENDER_IDENTITY,
 			// Link: "https://example-tes.com/",
 			// Logo: "https://example-tes.com/images/example.png",
+			// Custom copyright notice
+			Copyright: fmt.Sprintf("Copyright © 2024 %s. All rights reserved.", config.GetAppConfig().EMAIL_SENDER_IDENTITY),
 		},
 	}
 

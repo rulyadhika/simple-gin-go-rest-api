@@ -28,6 +28,8 @@ type appConfig struct {
 	EMAIL_SENDER_IDENTITY                        string
 	EMAIL_SENDER_AND_SMTP_USER                   string
 	EMAIL_SMTP_USER_PASSWORD                     string
+	PASSWORD_RESET_TOKEN_EXPIRATION_DURATION     time.Duration
+	PASSWORD_RESET_TOKEN_LENGTH                  uint
 }
 
 func init() {
@@ -69,6 +71,16 @@ func GetAppConfig() *appConfig {
 		log.Fatal("failed to parse string to uint, err:", err.Error())
 	}
 
+	passwordResetTokenExpDuration, err := time.ParseDuration(os.Getenv("PASSWORD_RESET_TOKEN_EXPIRATION_DURATION"))
+	if err != nil {
+		log.Fatal("failed to parse string to time.Duration, err:", err.Error())
+	}
+
+	passwordResetTokenLength, err := strconv.Atoi(os.Getenv("PASSWORD_RESET_TOKEN_LENGTH"))
+	if err != nil {
+		log.Fatal("failed to parse string to uint, err:", err.Error())
+	}
+
 	return &appConfig{
 		DB_DIALECT:                        os.Getenv("DB_DIALECT"),
 		DB_HOST:                           os.Getenv("DB_HOST"),
@@ -88,5 +100,7 @@ func GetAppConfig() *appConfig {
 		EMAIL_SENDER_IDENTITY:                        os.Getenv("EMAIL_SENDER_IDENTITY"),
 		EMAIL_SENDER_AND_SMTP_USER:                   os.Getenv("EMAIL_SENDER_AND_SMTP_USER"),
 		EMAIL_SMTP_USER_PASSWORD:                     os.Getenv("EMAIL_SMTP_USER_PASSWORD"),
+		PASSWORD_RESET_TOKEN_EXPIRATION_DURATION:     passwordResetTokenExpDuration,
+		PASSWORD_RESET_TOKEN_LENGTH:                  uint(passwordResetTokenLength),
 	}
 }

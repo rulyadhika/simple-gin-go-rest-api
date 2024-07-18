@@ -8,5 +8,7 @@ import (
 
 type AccountService interface {
 	Activation(ctx *gin.Context, token string) errs.Error
-	ResendActivationToken(ctx *gin.Context, resendTokenDto dto.ResendActivationTokenRequest) (*dto.ResendActivationTokenRespone, errs.Error)
+	ResendActivationToken(ctx *gin.Context, resendTokenDto *dto.ResendActivationTokenRequest) (*dto.ResendActivationTokenRespone, errs.Error)
+	ForgotPassword(ctx *gin.Context, forgotPasswordDto *dto.ForgotPasswordRequest) (*dto.ForgotPasswordRespone, errs.Error)
+	ResetPassword(ctx *gin.Context, resetPasswordDto *dto.ResetPasswordRequest) errs.Error
 }

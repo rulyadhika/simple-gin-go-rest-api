@@ -124,7 +124,7 @@ func (a *AuthServiceImpl) Register(ctx *gin.Context, userDto *dto.RegisterUserRe
 
 	// send activation link via email
 	go func() {
-		helper.SendTokenEmail(dto.SendTokenEmailRequest{ToEmailAddress: result.Email, Subject: "Account Activation", Username: result.Username, Token: accountActivation.Token})
+		helper.SendActivationTokenEmail(dto.SendActivationTokenEmailRequest{ToEmailAddress: result.Email, Subject: "Account Activation", Username: result.Username, Token: accountActivation.Token})
 	}()
 
 	// end of user account activation
